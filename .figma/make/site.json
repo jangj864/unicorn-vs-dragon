@@ -1,0 +1,11 @@
+{
+  "title": "Portal War",
+  "description": "Explore a fantastical New York City where players use themed manholes as portals to embark on adventures with unicorns and dragons, enhancing creativity and fun.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
