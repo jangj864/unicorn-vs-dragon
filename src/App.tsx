@@ -1,13 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import ArcadeGame from "./game/ArcadeGame";
+import { rpsResult } from "./game/engine";
+import { readProgress, PROGRESS_KEY } from "./game/progress";
 import dragonStage1 from "./imports/black-pixel-dragon-stage-1.png";
 import dragonStage2 from "./imports/black-pixel-dragon-stage-2.png";
 import dragonStage3 from "./imports/black-pixel-dragon-v2.png";
 import unicornPixelArt from "./imports/white-pixel-unicorn.png";
+import unicornStage1 from "./imports/white-pixel-unicorn-stage-1.png";
+import unicornStage2 from "./imports/white-pixel-unicorn-stage-2.png";
 import nycTacticalMap from "./imports/nyc-tactical-map-reference.png";
 import classifiedCover from "./imports/classified-report-cover.png";
 import classifiedNycStreet from "./imports/classified-nyc-street.png";
 import closedManhole from "./imports/manhole-closed-v2.png";
 import openManhole from "./imports/manhole-open-portal.png";
+import unicornManhole from "./imports/manhole-unicorn.png";
+import dragonManhole from "./imports/manhole-dragon.png";
 
 type Locale = "ko" | "en";
 type Team = "unicorn" | "dragon";
@@ -52,7 +59,7 @@ const copy = {
     shards: "스타 샤드",
     round: "라운드",
     versus: "결투",
-    portalHint: "빛나는 맨홀 뚜껑을 눌러 포탈을 선택하세요",
+    portalHint: "맨홀 문양을 확인하고 도전할 구역을 선택하세요",
     cityWar: "뉴욕 진영 현황",
     leading: "현재 우세",
     occupied: "점령",
@@ -140,6 +147,7 @@ function RpsIcon({ type }: { type: Rps }) {
 }
 
 const dragonArt: Record<EvolutionLevel, string> = { 1: dragonStage1, 2: dragonStage2, 3: dragonStage3 };
+const unicornArt: Record<EvolutionLevel, string> = { 1: unicornStage1, 2: unicornStage2, 3: unicornPixelArt };
 
 function PixelDragon({ flipped = false, level = 3 }: { flipped?: boolean; level?: EvolutionLevel }) {
   return (
@@ -156,7 +164,7 @@ function PixelUnicorn({ flipped = false, level = 3 }: { flipped?: boolean; level
   return (
     <img
       className={`pixel-creature unicorn unicorn-image unicorn-level-${level} ${flipped ? "flipped" : ""}`}
-      src={unicornPixelArt}
+      src={unicornArt[level]}
       alt={`White armored pixel unicorn level ${level}`}
       draggable={false}
     />
@@ -173,6 +181,10 @@ function LanguageToggle({ locale, onChange }: { locale: Locale; onChange: (value
   );
 }
 
+function PixelChest() {
+  return <svg className="loot-sprite" viewBox="0 0 32 28" role="img" aria-label="Star shard treasure chest" shapeRendering="crispEdges"><path fill="#07111f" d="M2 8h28v18H2zM5 3h22v8H5z"/><path fill="#98622e" d="M4 10h24v14H4zM7 5h18v6H7z"/><path fill="#dbad4c" d="M4 10h24v4H4zM6 5h4v19H6zM22 5h4v19h-4z"/><path fill="#603c26" d="M10 15h12v7H10z"/><path fill="#ffde7f" d="M13 11h6v7h-6zM15 0h2v4h-2zM0 4h3v3H0zM29 2h3v3h-3z"/><path fill="#151d2b" d="M15 13h2v3h-2z"/></svg>;
+}
+
 function PixelButton({ children, onClick, secondary = false, disabled = false }: { children: React.ReactNode; onClick?: () => void; secondary?: boolean; disabled?: boolean }) {
   return <button className={`pixel-button ${secondary ? "secondary" : ""}`} onClick={onClick} disabled={disabled}>{children}</button>;
 }
@@ -182,7 +194,7 @@ function TeamCard({ team, locale, selected, onClick }: { team: Team; locale: Loc
   return (
     <button className={`team-card ${team} ${selected ? "selected" : ""}`} onClick={onClick}>
       <span className="team-check">{selected ? "✓" : ""}</span>
-      <div className="team-sprite">{team === "unicorn" ? <PixelUnicorn flipped /> : <PixelDragon />}</div>
+      <div className="team-sprite">{team === "unicorn" ? <PixelUnicorn flipped level={3} /> : <PixelDragon level={3} />}</div>
       <span className="team-type">{locale === "ko" ? (team === "unicorn" ? "빛의 수호자" : "불꽃의 정복자") : (team === "unicorn" ? "GUARDIANS OF LIGHT" : "CONQUERORS OF FLAME")}</span>
       <strong>{team === "unicorn" ? t.unicornTeam : t.dragonTeam}</strong>
       <p>{team === "unicorn" ? t.unicornDesc : t.dragonDesc}</p>
@@ -195,6 +207,7 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
   const [step, setStep] = useState(0);
   const [team, setTeam] = useState<Team | null>(null);
   const [isTurning, setIsTurning] = useState(false);
+  const [turnTarget, setTurnTarget] = useState<number | null>(null);
   const [turnDirection, setTurnDirection] = useState<"next" | "back">("next");
   const turnTimers = useRef<number[]>([]);
   const t = copy[locale];
@@ -210,55 +223,58 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
 
   useEffect(() => () => turnTimers.current.forEach(window.clearTimeout), []);
 
-  const turnPage = () => {
-    if (isTurning || step >= 4) return;
-    setTurnDirection("next");
+  const navigateFile = (target: number) => {
+    if (isTurning || target < 0 || target > 4) return;
+    turnTimers.current.forEach(window.clearTimeout);
+    const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900;
+    setTurnDirection(target > step ? "next" : "back");
+    setTurnTarget(target);
     setIsTurning(true);
-    turnTimers.current.push(window.setTimeout(() => setStep((current) => current + 1), 700));
-    turnTimers.current.push(window.setTimeout(() => setIsTurning(false), 740));
+    turnTimers.current = [window.setTimeout(() => {
+      setStep(target);
+      setTurnTarget(null);
+      setIsTurning(false);
+    }, duration)];
   };
+  const turnPage = () => navigateFile(step + 1);
+  const turnBack = () => navigateFile(step - 1);
 
-  const turnBack = () => {
-    if (isTurning || step <= 0) return;
-    setTurnDirection("back");
-    setIsTurning(true);
-    turnTimers.current.push(window.setTimeout(() => setStep((current) => current - 1), 700));
-    turnTimers.current.push(window.setTimeout(() => setIsTurning(false), 740));
-  };
+  const renderFile = (page: number) => (page === 0 ? (
+              <article className="classified-cover" key="cover">
+                <div className="cover-identity"><span>NYC / OCCULT DEFENSE BUREAU</span><h1>{locale === "ko" ? "기밀 조사 보고서" : "CLASSIFIED REPORT"}</h1><p>{locale === "ko" ? "맨해튼 비인간 활동 기록" : "MANHATTAN NON-HUMAN ACTIVITY"}</p><div className="cover-rule" /><b>CASE FILE / 00–X</b><small>AUTHORIZED PERSONNEL ONLY<br />ARCHIVE RELEASE / 2091</small></div><img src={classifiedCover} alt={locale === "ko" ? "기밀 조사 보고서 표지" : "Classified investigation report cover"} draggable={false} />
+              </article>
+            ) : <article className="classified-file" key={page}>
+              <div className="file-edge" />
+              <div className="file-meta"><span>{story[page - 1].code}</span><span>09.28.2091</span></div>
+              <div className="redaction">██████ █████ ███</div>
+              <p className="file-kicker">NYC // NON-HUMAN ACTIVITY</p>
+              <h1>{story[page - 1].title}</h1>
+              <p className="file-lead">{story[page - 1].lead}</p>
+              <div className={`evidence evidence-${page - 1}`}>
+                {page === 1 && <><img className="old-skyline" src={classifiedNycStreet} alt="" draggable={false} /><PixelUnicorn /><PixelDragon flipped /></>}
+                {page === 2 && <><div className="archive-species unicorn-record"><span>01 / UNICORN</span><PixelUnicorn /><b>{locale === "ko" ? "버려진 고층 건물" : "ABANDONED TOWERS"}</b></div><div className="archive-species dragon-record"><span>02 / DRAGON</span><PixelDragon flipped /><b>{locale === "ko" ? "폐쇄된 지하철 터널" : "SEALED SUBWAY TUNNELS"}</b></div></>}
+                {page === 3 && <><div className="rift-location">MANHATTAN / BELOW STREET LEVEL</div><div className="rift-platform"><ManholePortal active /></div><div className="rift-caption"><span>PORTAL 001</span><b>{locale === "ko" ? "봉인 해제 · 진입 가능" : "SEAL BROKEN · ENTRY OPEN"}</b></div></>}
+              </div>
+              <p className="file-body">{story[page - 1].body}</p>
+              <div className="file-footer"><span>PAGE 0{page} / 03</span><strong>{story[page - 1].stamp}</strong></div>
+            </article>);
 
   return (
     <main className="onboarding">
       <div className="pixel-skyline onboarding-skyline" />
       <header className="onboarding-top">
-        <button className="mini-logo home-logo" onClick={() => { setStep(0); setTeam(null); }} aria-label={locale === "ko" ? "메인 화면으로" : "Go to home"}>
+        <button className="mini-logo home-logo" onClick={() => { turnTimers.current.forEach(window.clearTimeout); setIsTurning(false); setTurnTarget(null); setStep(0); setTeam(null); }} aria-label={locale === "ko" ? "메인 화면으로" : "Go to home"}>
           <span>DRAGON</span><i>VS</i><span>UNICORN</span>
         </button>
-        <LanguageToggle locale={locale} onChange={setLocale} />
+        <div className="onboarding-tools">{step >= 5 && team && <button className="skip-briefing" onClick={() => onComplete(team)}>{locale === "ko" ? "설명 건너뛰기" : "SKIP BRIEFING"} →</button>}{step < 4 && <button className="skip-briefing" onClick={() => { turnTimers.current.forEach(window.clearTimeout); setIsTurning(false); setTurnTarget(null); setStep(4); }}>{locale === "ko" ? "진영 선택으로" : "CHOOSE FACTION"} →</button>}<LanguageToggle locale={locale} onChange={setLocale} /></div>
       </header>
       <section className="onboarding-content">
         {step < 4 ? (
-          <div className={`classified-scene ${isTurning ? `page-turning ${turnDirection === "back" ? "page-turning-back" : ""}` : ""}`}>
+          <div className={`classified-scene archive-reader ${isTurning ? `page-turning ${turnDirection === "back" ? "page-turning-back" : ""}` : ""}`}>
             {step > 0 && <div className="archive-status"><span>NYC OCCULT DEFENSE BUREAU</span><b>SECURITY LEVEL // 08</b></div>}
             <div className="file-stack" aria-live="polite">
-            {step === 0 ? (
-              <article className="classified-cover" key="cover">
-                <img src={classifiedCover} alt={locale === "ko" ? "기밀 조사 보고서 표지" : "Classified investigation report cover"} draggable={false} />
-              </article>
-            ) : <article className="classified-file" key={step}>
-              <div className="file-edge" />
-              <div className="file-meta"><span>{story[step - 1].code}</span><span>09.28.2091</span></div>
-              <div className="redaction">██████ █████ ███</div>
-              <p className="file-kicker">NYC // NON-HUMAN ACTIVITY</p>
-              <h1>{story[step - 1].title}</h1>
-              <p className="file-lead">{story[step - 1].lead}</p>
-              <div className={`evidence evidence-${step - 1}`}>
-                {step === 1 && <><img className="old-skyline" src={classifiedNycStreet} alt="" draggable={false} /><PixelUnicorn /><PixelDragon flipped /></>}
-                {step === 2 && <><div className="surveillance-grid" /><PixelDragon flipped /><PixelUnicorn /></>}
-                {step === 3 && <><div className="portal-rings" /><ManholePortal active /><div className="signal-lines" /></>}
-              </div>
-              <p className="file-body">{story[step - 1].body}</p>
-              <div className="file-footer"><span>PAGE 0{step} / 03</span><strong>{story[step - 1].stamp}</strong></div>
-            </article>}
+            <div className={`book-sheet current-sheet ${isTurning && turnDirection === "next" ? "sheet-outgoing" : ""}`}>{renderFile(step)}</div>
+            {turnTarget !== null && turnTarget < 4 && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget)}</div>}
             <div className="page-underlay" aria-hidden="true" />
             </div>
             <div className="story-controls">
@@ -301,13 +317,13 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
   );
 }
 
-function ManholePortal({ active = false }: { active?: boolean }) {
+function ManholePortal({ active = false, owner = null }: { active?: boolean; owner?: Team | null }) {
   return (
     <span className={`manhole ${active ? "active" : ""}`}>
       <img
         className="manhole-image"
-        src={active ? openManhole : closedManhole}
-        alt={active ? "Open NYC manhole portal" : "Closed NYC manhole"}
+        src={owner === "unicorn" ? unicornManhole : owner === "dragon" ? dragonManhole : active ? openManhole : closedManhole}
+        alt={owner === "unicorn" ? "Unicorn-controlled manhole" : owner === "dragon" ? "Dragon-controlled manhole" : active ? "Open NYC manhole portal" : "Neutral NYC manhole"}
         draggable={false}
       />
     </span>
@@ -323,7 +339,7 @@ const storyboardText = {
     ["05 · 도시 탐색", "상세 지도에서 점령 현황을 확인하고 다음 작전 구역을 선택하세요."],
     ["06 · 포탈 결투", "가위바위보에서 먼저 2승을 거두면 포탈 방어막이 해제됩니다."],
     ["07 · 포탈 러너", "도시 지붕과 지하 배관을 뛰어넘고 스타 샤드를 회수하세요."],
-    ["08 · 점령과 보상", "결투를 마치면 포탈이 진영 색으로 바뀌고 진화 보상이 지급됩니다."],
+    ["08 · 점령과 보상", "게임을 클리어하면 맨홀에 진영의 문양이 새겨지고 샤드와 진화 보상을 받습니다."],
   ],
   en: [
     ["01 · ENCOUNTER", "Two hidden species detect the same manhole signal beneath Manhattan."],
@@ -333,7 +349,7 @@ const storyboardText = {
     ["05 · CITY SEARCH", "Read the tactical map, check control, and choose the next operation zone."],
     ["06 · PORTAL DUEL", "Win two rounds of rock-paper-scissors to break the portal shield."],
     ["07 · PORTAL RUNNER", "Leap across rooftops and pipes while recovering star shards."],
-    ["08 · CLAIM & REWARD", "The portal changes faction color and grants an evolution reward."],
+    ["08 · CLAIM & REWARD", "Clear the game to engrave your faction on the manhole and earn shards and evolution rewards."],
   ],
 };
 
@@ -348,14 +364,14 @@ function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { local
   return (
     <section className="storyboard-tutorial" key={safeScene}>
       <div className={`storyboard-stage scene-${safeScene}`}>
-        {safeScene === 0 && <><div className="brief-city" /><PixelUnicorn /><ManholePortal /><PixelDragon flipped /></>}
-        {safeScene === 1 && <><div className="portal-beam briefing-beam" /><ManholePortal active /></>}
-        {safeScene === 2 && <div className="evolution-line">{[0, 1, 2].map((level) => <div className={`evolution-form level-${level}`} key={level}>{evolutionGuardian(level)}<b>LV.{level + 1}</b></div>)}</div>}
-        {safeScene === 3 && <div className="brief-versus"><PixelDragon /><b>VS</b><PixelUnicorn flipped /></div>}
-        {safeScene === 4 && <div className="brief-map"><img src={nycTacticalMap} alt="" /><i /><i /><i /><i /></div>}
-        {safeScene === 5 && <><div className="brief-rps">{(["rock", "paper", "scissors"] as Rps[]).map((move) => <RpsIcon key={move} type={move} />)}</div><div className="brief-guardian">{guardian}</div></>}
+        {safeScene === 0 && <><div className="brief-city" /><PixelUnicorn /><PixelDragon flipped /></>}
+        {safeScene === 1 && <><div className="portal-sigil" aria-hidden="true"><i /><i /><i /><i /></div><ManholePortal active /></>}
+        {safeScene === 2 && <div className="evolution-line">{[0, 1, 2].map((level) => <div className={`evolution-form level-${level}`} key={level}><b className="evolution-badge">LV. {level + 1}</b><div className="evolution-platform" aria-hidden="true" />{evolutionGuardian(level)}<div className="evolution-caption"><strong>{(locale === "ko" ? ["정찰형", "전투형", "각성형"] : ["SCOUT", "BATTLE", "AWAKENED"])[level]}</strong><span aria-hidden="true">{[0, 1, 2].map((pip) => <i className={pip <= level ? "on" : ""} key={pip} />)}</span></div></div>)}</div>}
+        {safeScene === 3 && <><div className="brief-city" aria-hidden="true" /><div className="brief-versus"><PixelDragon /><b>VS</b><PixelUnicorn flipped /></div></>}
+        {safeScene === 4 && <div className="brief-map pixel-map"><div className="map-canvas"><img className="nyc-road-atlas" src={nycTacticalMap} alt="" draggable={false} />{zones.map((item) => <div key={item.id} className="zone-node owner-guide" style={{ left: `${item.x}%`, top: `${item.y}%` }}><ManholePortal /><span className="zone-name owner-guide"><b>{locale === "ko" ? item.ko : item.en}</b></span></div>)}</div></div>}
+        {safeScene === 5 && <><div className="brief-city" aria-hidden="true" /><div className="brief-rps">{(["rock", "paper", "scissors"] as Rps[]).map((move) => <div className="brief-rps-card" key={move}><RpsIcon type={move} /><b>{copy[locale][move]}</b></div>)}</div><div className="brief-guardian">{guardian}</div><span className="brief-rule">{locale === "ko" ? "2승을 먼저 달성하면 포탈 확보" : "FIRST TO 2 WINS · CAPTURE THE PORTAL"}</span></>}
         {safeScene === 6 && <div className="brief-run"><div className="run-guardian">{guardian}</div><span className="brief-coin">✦</span><i className="brief-pipe" /><ManholePortal active /></div>}
-        {safeScene === 7 && <><div className="capture-guardian">{guardian}</div><ManholePortal active /><div className="reward-chest"><i /><b>✦</b></div></>}
+        {safeScene === 7 && <div className={`reward-scene reward-${team}`}><div className="brief-city" aria-hidden="true" /><div className="reward-heading"><span>MISSION COMPLETE</span><h3>{locale === "ko" ? "새로운 구역을 확보했습니다" : "DISTRICT SECURED"}</h3><p>{locale === "ko" ? "당신의 진영이 뉴욕에 한 걸음 더 가까워졌습니다" : "One more district. One step closer to New York."}</p></div><div className="reward-display"><div className="reward-pedestal">{guardian}</div><div className="reward-loot"><ManholePortal owner={team} /><PixelChest /></div></div><div className="reward-summary"><div><small>STAR SHARDS</small><strong>+240 <span>✦</span></strong></div><div><small>{locale === "ko" ? "수호자 진화" : "GUARDIAN EVOLUTION"}</small><strong>LV +1 <span>↑</span></strong></div></div><span className="reward-note">{locale === "ko" ? "게임 클리어 → 포탈 점령 → 보상 획득 · 최대 LV.3" : "CLEAR → CLAIM → COLLECT · MAX LV.3"}</span></div>}
       </div>
       <div className="storyboard-copy">
         <span className="pixel-label">FIELD BRIEFING // {String(safeScene + 1).padStart(2, "0")}</span>
@@ -371,84 +387,6 @@ function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { local
   );
 }
 
-function PortalRunner({ locale, team, guardianLevel, onCapture, onExit }: { locale: Locale; team: Team; guardianLevel: EvolutionLevel; onCapture: () => void; onExit: () => void }) {
-  const [progress, setProgress] = useState(0);
-  const [height, setHeight] = useState(0);
-  const [shards, setShards] = useState(0);
-  const [status, setStatus] = useState<"running" | "lost" | "won">("running");
-  const velocity = useRef(0);
-  const heightRef = useRef(0);
-  const collected = useRef(new Set<number>());
-  const obstacles = [23, 48, 73, 91];
-  const coins = [12, 34, 59, 82];
-
-  const jump = () => {
-    if (status !== "running" || heightRef.current > 3) return;
-    velocity.current = 13;
-  };
-
-  const resetRun = () => {
-    setProgress(0);
-    setHeight(0);
-    setShards(0);
-    setStatus("running");
-    velocity.current = 0;
-    heightRef.current = 0;
-    collected.current.clear();
-  };
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (event.code === "Space" || event.code === "ArrowUp") {
-        event.preventDefault();
-        jump();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [status]);
-
-  useEffect(() => {
-    if (status !== "running") return;
-    const timer = window.setInterval(() => {
-      velocity.current -= 1.15;
-      heightRef.current = Math.max(0, heightRef.current + velocity.current);
-      if (heightRef.current === 0) velocity.current = 0;
-      setHeight(heightRef.current);
-      setProgress((current) => {
-        const next = Math.min(100, current + .65);
-        obstacles.forEach((point) => {
-          if (Math.abs(next - point) < .5 && heightRef.current < 48) setStatus("lost");
-        });
-        coins.forEach((point) => {
-          if (next >= point && !collected.current.has(point)) {
-            collected.current.add(point);
-            setShards((value) => value + 1);
-          }
-        });
-        if (next >= 100) setStatus("won");
-        return next;
-      });
-    }, 50);
-    return () => window.clearInterval(timer);
-  }, [status]);
-
-  return (
-    <div className="runner-game">
-      <div className="runner-hud"><div><span>DISTANCE</span><b>{Math.round(progress)}%</b></div><div className="runner-meter"><i style={{ width: `${progress}%` }} /></div><div><span>SHARDS</span><b>{shards}/4</b></div></div>
-      <div className="runner-skyline" />
-      <div className="runner-track">
-        <div className="runner-player" style={{ bottom: `calc(29% + ${height}px)` }}>{team === "dragon" ? <PixelDragon level={guardianLevel} /> : <PixelUnicorn level={guardianLevel} />}</div>
-        {obstacles.map((point) => <i key={point} className="runner-obstacle" style={{ left: `${20 + (point - progress) * 4}%` }} />)}
-        {coins.map((point) => !collected.current.has(point) && <b key={point} className="runner-shard" style={{ left: `${20 + (point - progress) * 4}%` }}>✦</b>)}
-        <ManholePortal active />
-      </div>
-      {status === "running" && <button className="jump-control" onPointerDown={jump}>{locale === "ko" ? "점프" : "JUMP"}<small>SPACE / ↑</small></button>}
-      {status !== "running" && <div className={`runner-result ${status}`}><span>{status === "won" ? "PORTAL REACHED" : "SIGNAL LOST"}</span><h2>{status === "won" ? (locale === "ko" ? "러너 성공!" : "RUN COMPLETE!") : (locale === "ko" ? "장애물 충돌" : "OBSTACLE HIT")}</h2><p>{status === "won" ? `+${shards * 60} STAR SHARDS` : (locale === "ko" ? "타이밍에 맞춰 다시 점프하세요." : "Time your jump and try again.")}</p>{status === "won" ? <PixelButton onClick={onCapture}>{locale === "ko" ? "포탈 점령" : "CLAIM PORTAL"}</PixelButton> : <PixelButton onClick={resetRun}>{locale === "ko" ? "다시 달리기" : "RUN AGAIN"}</PixelButton>}<PixelButton secondary onClick={onExit}>{locale === "ko" ? "지도로" : "BACK TO MAP"}</PixelButton></div>}
-    </div>
-  );
-}
-
 const gameInfo: Record<GameMode, { ko: string; en: string; code: string }> = {
   rps: { ko: "가위바위보 결투", en: "RPS Duel", code: "RPS–02" },
   runner: { ko: "포탈 러너", en: "Portal Runner", code: "RUN–04" },
@@ -458,116 +396,22 @@ const gameInfo: Record<GameMode, { ko: string; en: string; code: string }> = {
   invader: { ko: "스카이 인베이더", en: "Sky Invader", code: "INV–06" },
 };
 
-function RetroMiniGame({ mode, locale, team, guardianLevel, onCapture, onExit }: { mode: Exclude<GameMode, "rps" | "runner">; locale: Locale; team: Team; guardianLevel: EvolutionLevel; onCapture: () => void; onExit: () => void }) {
-  const target = mode === "memory" ? 4 : 6;
-  const [score, setScore] = useState(0);
-  const [cleared, setCleared] = useState<number[]>([]);
-  const [openCards, setOpenCards] = useState<number[]>([]);
-  const [matched, setMatched] = useState<number[]>([]);
-  const [lane, setLane] = useState(1);
-  const [invaderLane, setInvaderLane] = useState(1);
-  const symbols = ["◆", "●", "▲", "■", "◆", "●", "▲", "■"];
-  const won = score >= target;
-
-  useEffect(() => {
-    if (mode !== "invader" || won) return;
-    const timer = window.setInterval(() => setInvaderLane((current) => (current + 1 + Math.floor(Math.random() * 2)) % 3), 720);
-    return () => window.clearInterval(timer);
-  }, [mode, won]);
-
-  const advance = () => setScore((current) => Math.min(target, current + 1));
-  const clearBrick = (index: number) => {
-    if (cleared.includes(index) || won) return;
-    setCleared((current) => [...current, index]);
-    advance();
-  };
-  const flipCard = (index: number) => {
-    if (openCards.length >= 2 || matched.includes(index) || openCards.includes(index) || won) return;
-    const next = [...openCards, index];
-    setOpenCards(next);
-    if (next.length === 2) {
-      if (symbols[next[0]] === symbols[next[1]]) {
-        setMatched((current) => [...current, ...next]);
-        advance();
-        window.setTimeout(() => setOpenCards([]), 350);
-      } else {
-        window.setTimeout(() => setOpenCards([]), 650);
-      }
-    }
-  };
-  const fire = () => {
-    if (lane === invaderLane && !won) advance();
-  };
-
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => {
-      if (won) return;
-      if (mode === "snake" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.code)) {
-        event.preventDefault();
-        advance();
-      }
-      if (mode === "breakout" && event.code === "Space") {
-        event.preventDefault();
-        const nextBrick = Array.from({ length: 18 }).findIndex((_, index) => !cleared.includes(index));
-        if (nextBrick >= 0) clearBrick(nextBrick);
-      }
-      if (mode === "memory" && /^Digit[1-8]$/.test(event.code)) {
-        flipCard(Number(event.code.slice(-1)) - 1);
-      }
-      if (mode === "invader") {
-        if (event.code === "ArrowLeft") setLane((current) => Math.max(0, current - 1));
-        if (event.code === "ArrowRight") setLane((current) => Math.min(2, current + 1));
-        if (event.code === "Space") {
-          event.preventDefault();
-          fire();
-        }
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
-
-  const instructions = {
-    snake: locale === "ko" ? "방향키 또는 패드로 샤드를 6개 수집하세요." : "Use arrow keys or the pad to collect 6 shards.",
-    breakout: locale === "ko" ? "벽돌을 클릭하거나 SPACE로 6개를 파괴하세요." : "Click bricks or press SPACE to destroy 6.",
-    memory: locale === "ko" ? "카드 또는 숫자 1–8을 눌러 같은 룬 4쌍을 찾으세요." : "Use cards or keys 1–8 to find 4 matching pairs.",
-    invader: locale === "ko" ? "좌우 이동 후 같은 라인에서 발사하세요." : "Move left or right and fire in the matching lane.",
-  }[mode];
-
-  return (
-    <div className={`retro-game retro-${mode}`}>
-      <div className="retro-hud"><span>{gameInfo[mode].code}</span><b>{locale === "ko" ? gameInfo[mode].ko : gameInfo[mode].en}</b><strong>{score}/{target}</strong></div>
-      <p className="retro-instructions">{instructions}</p>
-      <div className="retro-board">
-        {mode === "snake" && <>
-          <div className="snake-grid">{Array.from({ length: 36 }).map((_, index) => <i key={index} className={index >= 19 - score && index <= 21 ? "snake" : index === 9 + score ? "food" : ""}>{index === 9 + score ? "✦" : ""}</i>)}</div>
-          <div className="arcade-pad"><button onClick={advance}>▲</button><button onClick={advance}>◀</button><button onClick={advance}>▼</button><button onClick={advance}>▶</button></div>
-        </>}
-        {mode === "breakout" && <>
-          <div className="brick-field">{Array.from({ length: 18 }).map((_, index) => <button key={index} className={cleared.includes(index) ? "cleared" : ""} onClick={() => clearBrick(index)} />)}</div>
-          <div className="breakout-ball" style={{ left: `${15 + score * 12}%` }} /><div className="breakout-paddle" />
-        </>}
-        {mode === "memory" && <div className="memory-grid">{symbols.map((symbol, index) => <button key={index} className={matched.includes(index) ? "matched" : openCards.includes(index) ? "open" : ""} onClick={() => flipCard(index)}>{matched.includes(index) || openCards.includes(index) ? symbol : "?"}</button>)}</div>}
-        {mode === "invader" && <>
-          <div className="invader-grid"><i className="invader" style={{ left: `${17 + invaderLane * 33}%` }}>▼</i><div className="laser" style={{ left: `${17 + lane * 33}%` }} /><div className="ship" style={{ left: `${17 + lane * 33}%` }}>▲</div></div>
-          <div className="invader-controls"><button onClick={() => setLane((current) => Math.max(0, current - 1))}>◀</button><button onClick={fire}>FIRE</button><button onClick={() => setLane((current) => Math.min(2, current + 1))}>▶</button></div>
-        </>}
-      </div>
-      <div className="retro-avatar">{team === "dragon" ? <PixelDragon level={guardianLevel} /> : <PixelUnicorn level={guardianLevel} />}</div>
-      {won && <div className="retro-victory"><span>ARCADE CLEAR</span><h2>{locale === "ko" ? "포탈 해제!" : "PORTAL UNLOCKED!"}</h2><p>+{target * 40} STAR SHARDS</p><PixelButton onClick={onCapture}>{locale === "ko" ? "포탈 점령" : "CLAIM PORTAL"}</PixelButton><PixelButton secondary onClick={onExit}>{locale === "ko" ? "지도로" : "BACK TO MAP"}</PixelButton></div>}
-    </div>
-  );
-}
-
 export default function App() {
   const [locale, setLocale] = useState<Locale>("ko");
   const [team, setTeam] = useState<Team | null>(null);
-  const [guardianLevel, setEvolutionLevel] = useState<EvolutionLevel>(1);
+  const [savedProgress] = useState(readProgress);
+  const [levels, setLevels] = useState<Record<Team, EvolutionLevel>>(savedProgress?.levels ?? { dragon: 1, unicorn: 1 });
+  const guardianLevel = levels[team ?? "dragon"];
   const [zoneId, setZoneId] = useState(1);
+  const [shards, setShards] = useState(savedProgress?.shards ?? 0);
+  const roundBusy = useRef(false);
+  const roundTimer = useRef<number | undefined>(undefined);
+  const [roundPending, setRoundPending] = useState(false);
+  useEffect(() => () => window.clearTimeout(roundTimer.current), []);
   const [inBattle, setInBattle] = useState(false);
   const [gameMode, setGameMode] = useState<GameMode>("rps");
-  const [owners, setOwners] = useState<(Team | null)[]>(zones.map((zone) => zone.owner));
-  const [scores, setScores] = useState({ dragon: 48, unicorn: 52 });
+  const [owners, setOwners] = useState<(Team | null)[]>(savedProgress?.owners ?? zones.map((zone) => zone.owner));
+  const [scores, setScores] = useState(savedProgress?.scores ?? { dragon: 48, unicorn: 52 });
   const [playerWins, setPlayerWins] = useState(0);
   const [enemyWins, setEnemyWins] = useState(0);
   const [playerMove, setPlayerMove] = useState<Rps | null>(null);
@@ -602,7 +446,11 @@ export default function App() {
     return () => window.removeEventListener("resize", containMap);
   }, []);
 
-  if (!team) return <Onboarding locale={locale} setLocale={setLocale} onComplete={(selectedTeam) => { setEvolutionLevel(1); setTeam(selectedTeam); }} />;
+  useEffect(() => {
+    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify({ shards, levels, owners, scores })); } catch { /* Play remains available when storage is unavailable. */ }
+  }, [shards, levels, owners, scores]);
+
+  if (!team) return <Onboarding locale={locale} setLocale={setLocale} onComplete={(selectedTeam) => { setTeam(selectedTeam); }} />;
 
   const claimPortal = (winner: Team) => {
     setOwners((current) => current.map((owner, index) => index === zoneId ? winner : owner));
@@ -610,16 +458,19 @@ export default function App() {
       ? { dragon: Math.min(99, current.dragon + 1), unicorn: Math.max(1, current.unicorn - 1) }
       : { dragon: Math.max(1, current.dragon - 1), unicorn: Math.min(99, current.unicorn + 1) });
     if (winner === team) {
-      setEvolutionLevel((current) => Math.min(3, current + 1) as EvolutionLevel);
+      setShards((current) => current + 240);
+      setLevels((current) => ({ ...current, [team]: Math.min(3, current[team] + 1) as EvolutionLevel }));
     }
   };
 
   const play = (move: Rps) => {
-    if (playerWins >= 2 || enemyWins >= 2) return;
+    if (playerWins >= 2 || enemyWins >= 2 || roundBusy.current) return;
+    roundBusy.current = true; setRoundPending(true);
+    roundTimer.current = window.setTimeout(() => { roundBusy.current = false; setRoundPending(false); }, 650);
     const moves: Rps[] = ["rock", "paper", "scissors"];
     const rival = moves[Math.floor(Math.random() * moves.length)];
-    const didWin = (move === "rock" && rival === "scissors") || (move === "paper" && rival === "rock") || (move === "scissors" && rival === "paper");
-    const didLose = (rival === "rock" && move === "scissors") || (rival === "paper" && move === "rock") || (rival === "scissors" && move === "paper");
+    const didWin = rpsResult(move, rival) === "win";
+    const didLose = rpsResult(move, rival) === "lose";
     setPlayerMove(move);
     setEnemyMove(rival);
     setResult(didWin ? "win" : didLose ? "lose" : "draw");
@@ -638,6 +489,7 @@ export default function App() {
   };
 
   const restart = () => {
+    window.clearTimeout(roundTimer.current); roundBusy.current = false; setRoundPending(false);
     setPlayerWins(0);
     setEnemyWins(0);
     setPlayerMove(null);
@@ -712,7 +564,7 @@ export default function App() {
             <p><b>DRAGON {scores.dragon}%</b><b>UNICORN {scores.unicorn}%</b></p>
           </div>
           <div className="team-status">
-            <span>{t.yourTeam}</span>
+            <span>{t.yourTeam}</span><div className="shard-wallet">✦ {shards.toLocaleString()} <small>{t.shards}</small></div>
             <div>{team === "dragon" ? <PixelDragon level={guardianLevel} /> : <PixelUnicorn level={guardianLevel} />}<strong>{team === "dragon" ? `${t.dragonTeam} · LV.${guardianLevel}` : `${t.unicornTeam} · LV.${guardianLevel}`}</strong></div>
           </div>
           <button className="change-team" onClick={() => setTeam(null)}>↺ {t.changeTeam}</button>
@@ -742,43 +594,28 @@ export default function App() {
                   <button className="map-reset" onClick={resetMapView} aria-label={locale === "ko" ? "지도 초기화" : "Reset map"}>⌂</button>
                 </div>
                 <div className="map-drag-hint">{locale === "ko" ? "드래그하여 이동 · 휠로 확대" : "DRAG TO PAN · SCROLL TO ZOOM"}</div>
-                <div className="map-crosshair" aria-hidden="true"><i /><i /></div>
+                <div className="map-crosshair" aria-hidden="true"><i /><i /></div><div className="map-legend" aria-label={locale === "ko" ? "지도 범례" : "Map legend"}><span><img src={unicornManhole} alt="" />{locale === "ko" ? "유니콘" : "Unicorn"}</span><span><img src={dragonManhole} alt="" />{locale === "ko" ? "드래곤" : "Dragon"}</span><span><img src={closedManhole} alt="" />{locale === "ko" ? "중립" : "Neutral"}</span></div>
                 <div
                   className="map-canvas"
                   style={{ transform: `translate3d(${mapView.x}px, ${mapView.y}px, 0) scale(${mapView.zoom})` }}
                 >
                 <img className="nyc-road-atlas" src={nycTacticalMap} alt="" draggable={false} />
                 {zones.map((item) => (
-                  <button key={item.id} className={`zone-node owner-${owners[item.id] ?? "neutral"} ${zoneId === item.id ? "selected" : ""} ${item.locked ? "locked" : ""}`} style={{ left: `${item.x}%`, top: `${item.y}%` }} onClick={() => !item.locked && setZoneId(item.id)}>
-                    <ManholePortal active={zoneId === item.id} />
-                    <span className={`zone-name owner-${owners[item.id] ?? "neutral"}`}><b>{locale === "ko" ? item.ko : item.en}</b><small>{item.locked ? t.locked : owners[item.id] ? `${t.occupied} · ${owners[item.id]?.toUpperCase()}` : `${t.neutral} · LV.${item.danger}`}</small></span>
+                  <button key={item.id} className={`zone-node owner-${owners[item.id] ?? "neutral"} ${zoneId === item.id ? "selected" : ""} ${item.locked ? "locked" : ""}`} style={{ left: `${item.x}%`, top: `${item.y}%` }} aria-pressed={zoneId === item.id} onClick={() => !item.locked && setZoneId(item.id)}>
+                    <ManholePortal owner={owners[item.id]} />
+                    <span className={`zone-name owner-${owners[item.id] ?? "neutral"}`}><b>{locale === "ko" ? item.ko : item.en}</b><small>{item.locked ? t.locked : owners[item.id] ? `${owners[item.id] === "unicorn" ? t.unicornTeam : t.dragonTeam}` : `${t.neutral} · LV.${item.danger}`}</small>{zoneId === item.id && <em className="zone-selected-label">✓ {locale === "ko" ? "선택됨" : "SELECTED"}</em>}</span>
                   </button>
                 ))}
                 </div>
               </div>
             </>
-          ) : gameMode === "runner" ? (
-            <PortalRunner
-              locale={locale}
-              team={team}
-              guardianLevel={guardianLevel}
-              onCapture={() => {
-                claimPortal(team);
-                setInBattle(false);
-              }}
-              onExit={() => setInBattle(false)}
-            />
           ) : gameMode !== "rps" ? (
-            <RetroMiniGame
+            <ArcadeGame
               key={`${zoneId}-${gameMode}`}
               mode={gameMode}
               locale={locale}
-              team={team}
-              guardianLevel={guardianLevel}
-              onCapture={() => {
-                claimPortal(team);
-                setInBattle(false);
-              }}
+              guardian={team === "dragon" ? dragonArt[guardianLevel] : unicornArt[guardianLevel]}
+              onCapture={() => { claimPortal(team); setInBattle(false); }}
               onExit={() => setInBattle(false)}
             />
           ) : (
@@ -799,7 +636,7 @@ export default function App() {
                 <div className={team === "unicorn" ? "player fighter" : "enemy fighter"}><PixelUnicorn flipped level={team === "unicorn" ? guardianLevel : 3} /></div>
               </div>
               <div className="battle-ground"><ManholePortal active /></div>
-              {playerWins === 2 && <div className="victory-banner"><div className="reward-chest"><i /><b>✦</b></div><span>PORTAL SECURED</span><h2>{t.victory}</h2><p>{t.defeated} · +240 {t.shards}</p><PixelButton onClick={restart}>{t.reset}</PixelButton></div>}
+              {playerWins === 2 && <div className="victory-banner"><div className="victory-loot"><ManholePortal owner={team} /><PixelChest /></div><span>PORTAL SECURED</span><h2>{t.victory}</h2><p>{t.defeated} · +240 {t.shards}</p><PixelButton onClick={restart}>{t.reset}</PixelButton></div>}
               {enemyWins === 2 && <div className="victory-banner defeated-banner"><span>×</span><h2>{locale === "ko" ? "패배" : "DEFEAT"}</h2><p>{locale === "ko" ? "상대 진영이 포탈을 점령했습니다." : "The rival faction captured this portal."}</p><PixelButton onClick={restart}>{t.reset}</PixelButton></div>}
             </div>
           )}
@@ -810,7 +647,7 @@ export default function App() {
             <>
               <span className="pixel-label">{t.selected}</span>
               <h2>{locale === "ko" ? zone.ko : zone.en}</h2>
-              <div className="portal-inspector"><ManholePortal active /><div className="street-lines" /></div>
+              <div className="portal-inspector"><ManholePortal owner={owners[zone.id]} /><div className="street-lines" /></div>
               <div className={`portal-meta owner-${owners[zone.id] ?? "neutral"}`}><span>{t.portal}</span><b>NYC–0{zone.id + 1}</b><small>{owners[zone.id] ? `${t.occupied} // ${owners[zone.id]?.toUpperCase()}` : `${t.neutral} // ${zone.danger * 240} PX DEPTH`}</small></div>
               <div className="portal-game"><span>ARCADE // {gameInfo[zone.game].code}</span><b>{locale === "ko" ? gameInfo[zone.game].ko : gameInfo[zone.game].en}</b></div>
               <PixelButton onClick={() => { restart(); setGameMode(zone.game); setInBattle(true); }}>{locale === "ko" ? "게임 시작" : "START GAME"} <span>▶</span></PixelButton>
@@ -837,7 +674,7 @@ export default function App() {
               <p className="rps-help">{t.rpsBody}</p>
               <div className="ability-list">
                 {(["rock", "paper", "scissors"] as Rps[]).map((move, index) => (
-                  <button key={move} onClick={() => play(move)} disabled={playerWins === 2 || enemyWins === 2} className={playerMove === move ? "chosen" : ""}>
+                  <button key={move} onClick={() => play(move)} disabled={roundPending || playerWins === 2 || enemyWins === 2} className={playerMove === move ? "chosen" : ""}>
                     <b>0{index + 1}</b><RpsIcon type={move} /><span>{t[move]}<small>{move.toUpperCase()}</small></span>
                   </button>
                 ))}

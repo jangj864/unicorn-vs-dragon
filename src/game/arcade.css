@@ -1,0 +1,59 @@
+.arcade-cabinet { --cabinet-accent: #6bded8; min-height: 640px; padding: 22px; background: #101e30; color: #f2e9cf; }
+.cabinet-breakout,.cabinet-runner { --cabinet-accent: #f0c85c; }
+.cabinet-invader { --cabinet-accent: #ef8070; }
+.cabinet-memory { --cabinet-accent: #b5a0e4; }
+.cabinet-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 3px solid var(--cabinet-accent); padding-bottom: 16px; }
+.cabinet-header span { font: 7px var(--arcade); color: var(--cabinet-accent); }
+.cabinet-header h2 { font: 700 clamp(17px,2vw,26px) var(--pixel); margin: 8px 0 0; }
+.cabinet-pause,.cabinet-exit { border: 1px solid #526981; color: #cfdae2; background: #13273c; padding: 10px 12px; cursor: pointer; font-size: 12px; }
+.cabinet-pause:disabled { opacity: .45; cursor: default; }
+.cabinet-stats { display: grid; grid-template-columns: repeat(3,1fr); margin-top: 16px; border: 2px solid #34495e; background: #08121f; }
+.cabinet-stats>div { padding: 12px; border-right: 1px solid #34495e; }
+.cabinet-stats>div:last-child { border: 0; }
+.cabinet-stats small { display: block; color: #92a8bb; font-size: 11px; margin-bottom: 8px; }
+.cabinet-stats b { font: 16px var(--arcade); color: var(--cabinet-accent); }
+.cabinet-stats b span { font: 12px var(--pixel); color: #b8c8d6; }
+.cabinet-stats .life-count { color: #ef8070; }
+.cabinet-instructions { min-height: 44px; margin: 14px 0; font-size: 13px; line-height: 1.7; color: #adbfce; }
+.cabinet-screen { position: relative; isolation: isolate; width: 100%; max-width: 800px; margin: auto; aspect-ratio: 4/3; background: #071320; border: 4px solid #34495e; box-shadow: 6px 6px 0 #040912; }
+.cabinet-screen canvas { width: 100%; height: 100%; display: block; image-rendering: pixelated; touch-action: none; }
+.cabinet-overlay { position: absolute; inset: 0; z-index: 2; background: #07111ff2; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 16px; }
+.cabinet-overlay>img { width: clamp(48px,8vw,92px); height: clamp(48px,8vw,92px); object-fit: contain; image-rendering: pixelated; margin: 10px 0; }
+.cabinet-overlay h3 { margin: 5px; font-size: clamp(18px,2vw,28px); color: var(--cabinet-accent); }
+.cabinet-overlay p { font-size: 12px; max-width: 330px; line-height: 1.6; margin: 8px 0 16px; }
+.cabinet-overlay .pixel-button { margin: 0 0 10px; width: min(280px,90%); }
+.cabinet-exit { border: 0; background: none; text-decoration: underline; text-underline-offset: 4px; }
+.cabinet-controls { min-height: 66px; display: flex; gap: 12px; justify-content: center; align-items: center; padding-top: 18px; }
+.cabinet-controls button { touch-action: none; min-width: 60px; min-height: 48px; padding: 10px 18px; color: #e7e4cb; background: #1b3046; border: 2px solid #536c82; box-shadow: 3px 4px 0 #040912; font-size: 17px; cursor: pointer; }
+.cabinet-controls button:active { translate: 2px 2px; box-shadow: none; background: #345370; }
+.cabinet-controls button:disabled { opacity: .4; cursor: default; }
+.cabinet-controls>span { color: #b5a0e4; font-size: 12px; }
+.cabinet-dpad { display: flex; gap: 10px; }
+.rune-board { display: grid; grid-template-columns: repeat(4,1fr); grid-template-rows: repeat(3,1fr); gap: 12px; width: 100%; height: 100%; padding: 18px; }
+.rune { display: grid; place-content: center; position: relative; border: 2px solid #63728d; background: #1b2b43; color: #b5a0e4; box-shadow: inset 0 0 0 5px #0d1b2d,3px 3px 0 #020810; cursor: pointer; }
+.rune>span { font-size: 30px; }.rune small { font: 7px var(--arcade); padding-top: 6px; }
+.rune svg { width: clamp(26px,5vw,58px); height: clamp(26px,5vw,58px); fill: currentColor; shape-rendering: crispEdges; }
+.rune.revealed { color: #f0c85c; border-color: #f0c85c; background: #283049; }
+.rune.matched { color: #8be8cb; border-color: #8be8cb; background: #193f40; box-shadow: inset 0 0 0 5px #102d30; }
+.arcade-cabinet button:focus-visible { outline: 3px solid #fff1ac; outline-offset: 3px; }
+@media(max-width:760px) {
+  .arcade-cabinet { min-height: 0; padding: 14px 10px 24px; }
+  .cabinet-stats>div { padding: 9px; }.cabinet-stats b { font-size: 13px; }
+  .cabinet-instructions { font-size: 12px; }.cabinet-overlay { padding: 10px; }
+  .cabinet-overlay>img { width: 44px; height: 44px; margin: 4px; }
+  .cabinet-overlay p { margin: 4px 0 8px; font-size: 11px; }
+  .cabinet-overlay .pixel-button { padding: 10px; min-height: 40px; font-size: 11px; }
+  .cabinet-exit { padding: 6px; font-size: 10px; }.rune-board { padding: 10px; gap: 7px; }
+  .cabinet-controls button { min-width: 54px; }.cabinet-header span { font-size: 6px; }
+}
+
+@media(min-width:761px) { .cabinet-screen { width: min(100%, max(320px, calc((100svh - 430px) * 1.3333))); }.arcade-cabinet { min-height: calc(100svh - 72px); } }
+@media(min-width:761px) {
+  .arcade-cabinet { padding: 16px; }
+  .cabinet-header { padding-bottom: 10px; }
+  .cabinet-header h2 { margin-top: 5px; font-size: 23px; }
+  .cabinet-stats { margin-top: 10px; }.cabinet-stats>div { padding: 8px 12px; }
+  .cabinet-stats small { margin-bottom: 6px; }
+  .cabinet-instructions { min-height: 32px; margin: 10px 0; font-size: 12px; }
+  .cabinet-screen { width: min(100%, max(320px, calc((100svh - 365px) * 1.3333))); }
+}
