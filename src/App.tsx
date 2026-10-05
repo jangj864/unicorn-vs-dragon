@@ -11,7 +11,7 @@ import openManhole from "./imports/manhole-open-portal.png";
 
 type Locale = "ko" | "en";
 type Team = "unicorn" | "dragon";
-type DragonLevel = 1 | 2 | 3;
+type EvolutionLevel = 1 | 2 | 3;
 type Rps = "rock" | "paper" | "scissors";
 type GameMode = "rps" | "runner" | "snake" | "breakout" | "memory" | "invader";
 
@@ -139,9 +139,9 @@ function RpsIcon({ type }: { type: Rps }) {
   );
 }
 
-const dragonArt: Record<DragonLevel, string> = { 1: dragonStage1, 2: dragonStage2, 3: dragonStage3 };
+const dragonArt: Record<EvolutionLevel, string> = { 1: dragonStage1, 2: dragonStage2, 3: dragonStage3 };
 
-function PixelDragon({ flipped = false, level = 1 }: { flipped?: boolean; level?: DragonLevel }) {
+function PixelDragon({ flipped = false, level = 3 }: { flipped?: boolean; level?: EvolutionLevel }) {
   return (
     <img
       className={`pixel-creature dragon dragon-image dragon-level-${level} ${flipped ? "flipped" : ""}`}
@@ -152,12 +152,12 @@ function PixelDragon({ flipped = false, level = 1 }: { flipped?: boolean; level?
   );
 }
 
-function PixelUnicorn({ flipped = false }: { flipped?: boolean }) {
+function PixelUnicorn({ flipped = false, level = 3 }: { flipped?: boolean; level?: EvolutionLevel }) {
   return (
     <img
-      className={`pixel-creature unicorn unicorn-image ${flipped ? "flipped" : ""}`}
+      className={`pixel-creature unicorn unicorn-image unicorn-level-${level} ${flipped ? "flipped" : ""}`}
       src={unicornPixelArt}
-      alt="White armored pixel unicorn"
+      alt={`White armored pixel unicorn level ${level}`}
       draggable={false}
     />
   );
@@ -340,10 +340,10 @@ const storyboardText = {
 function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { locale: Locale; team: Team; scene: number; onPrevious: () => void; onNext: () => void }) {
   const safeScene = Math.min(7, Math.max(0, scene));
   const [title, body] = storyboardText[locale][safeScene];
-  const guardian = team === "dragon" ? <PixelDragon /> : <PixelUnicorn />;
+  const guardian = team === "dragon" ? <PixelDragon level={3} /> : <PixelUnicorn level={3} />;
   const evolutionGuardian = (level: number) => team === "dragon"
-    ? <PixelDragon level={(level + 1) as DragonLevel} />
-    : <PixelUnicorn />;
+    ? <PixelDragon level={(level + 1) as EvolutionLevel} />
+    : <PixelUnicorn level={(level + 1) as EvolutionLevel} />;
 
   return (
     <section className="storyboard-tutorial" key={safeScene}>
@@ -371,7 +371,7 @@ function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { local
   );
 }
 
-function PortalRunner({ locale, team, dragonLevel, onCapture, onExit }: { locale: Locale; team: Team; dragonLevel: DragonLevel; onCapture: () => void; onExit: () => void }) {
+function PortalRunner({ locale, team, guardianLevel, onCapture, onExit }: { locale: Locale; team: Team; guardianLevel: EvolutionLevel; onCapture: () => void; onExit: () => void }) {
   const [progress, setProgress] = useState(0);
   const [height, setHeight] = useState(0);
   const [shards, setShards] = useState(0);
@@ -438,7 +438,7 @@ function PortalRunner({ locale, team, dragonLevel, onCapture, onExit }: { locale
       <div className="runner-hud"><div><span>DISTANCE</span><b>{Math.round(progress)}%</b></div><div className="runner-meter"><i style={{ width: `${progress}%` }} /></div><div><span>SHARDS</span><b>{shards}/4</b></div></div>
       <div className="runner-skyline" />
       <div className="runner-track">
-        <div className="runner-player" style={{ bottom: `calc(29% + ${height}px)` }}>{team === "dragon" ? <PixelDragon level={dragonLevel} /> : <PixelUnicorn />}</div>
+        <div className="runner-player" style={{ bottom: `calc(29% + ${height}px)` }}>{team === "dragon" ? <PixelDragon level={guardianLevel} /> : <PixelUnicorn level={guardianLevel} />}</div>
         {obstacles.map((point) => <i key={point} className="runner-obstacle" style={{ left: `${20 + (point - progress) * 4}%` }} />)}
         {coins.map((point) => !collected.current.has(point) && <b key={point} className="runner-shard" style={{ left: `${20 + (point - progress) * 4}%` }}>✦</b>)}
         <ManholePortal active />
@@ -458,7 +458,7 @@ const gameInfo: Record<GameMode, { ko: string; en: string; code: string }> = {
   invader: { ko: "스카이 인베이더", en: "Sky Invader", code: "INV–06" },
 };
 
-function RetroMiniGame({ mode, locale, team, dragonLevel, onCapture, onExit }: { mode: Exclude<GameMode, "rps" | "runner">; locale: Locale; team: Team; dragonLevel: DragonLevel; onCapture: () => void; onExit: () => void }) {
+function RetroMiniGame({ mode, locale, team, guardianLevel, onCapture, onExit }: { mode: Exclude<GameMode, "rps" | "runner">; locale: Locale; team: Team; guardianLevel: EvolutionLevel; onCapture: () => void; onExit: () => void }) {
   const target = mode === "memory" ? 4 : 6;
   const [score, setScore] = useState(0);
   const [cleared, setCleared] = useState<number[]>([]);
@@ -553,7 +553,7 @@ function RetroMiniGame({ mode, locale, team, dragonLevel, onCapture, onExit }: {
           <div className="invader-controls"><button onClick={() => setLane((current) => Math.max(0, current - 1))}>◀</button><button onClick={fire}>FIRE</button><button onClick={() => setLane((current) => Math.min(2, current + 1))}>▶</button></div>
         </>}
       </div>
-      <div className="retro-avatar">{team === "dragon" ? <PixelDragon level={dragonLevel} /> : <PixelUnicorn />}</div>
+      <div className="retro-avatar">{team === "dragon" ? <PixelDragon level={guardianLevel} /> : <PixelUnicorn level={guardianLevel} />}</div>
       {won && <div className="retro-victory"><span>ARCADE CLEAR</span><h2>{locale === "ko" ? "포탈 해제!" : "PORTAL UNLOCKED!"}</h2><p>+{target * 40} STAR SHARDS</p><PixelButton onClick={onCapture}>{locale === "ko" ? "포탈 점령" : "CLAIM PORTAL"}</PixelButton><PixelButton secondary onClick={onExit}>{locale === "ko" ? "지도로" : "BACK TO MAP"}</PixelButton></div>}
     </div>
   );
@@ -562,7 +562,7 @@ function RetroMiniGame({ mode, locale, team, dragonLevel, onCapture, onExit }: {
 export default function App() {
   const [locale, setLocale] = useState<Locale>("ko");
   const [team, setTeam] = useState<Team | null>(null);
-  const [dragonLevel, setDragonLevel] = useState<DragonLevel>(1);
+  const [guardianLevel, setEvolutionLevel] = useState<EvolutionLevel>(1);
   const [zoneId, setZoneId] = useState(1);
   const [inBattle, setInBattle] = useState(false);
   const [gameMode, setGameMode] = useState<GameMode>("rps");
@@ -602,15 +602,15 @@ export default function App() {
     return () => window.removeEventListener("resize", containMap);
   }, []);
 
-  if (!team) return <Onboarding locale={locale} setLocale={setLocale} onComplete={(selectedTeam) => { setDragonLevel(1); setTeam(selectedTeam); }} />;
+  if (!team) return <Onboarding locale={locale} setLocale={setLocale} onComplete={(selectedTeam) => { setEvolutionLevel(1); setTeam(selectedTeam); }} />;
 
   const claimPortal = (winner: Team) => {
     setOwners((current) => current.map((owner, index) => index === zoneId ? winner : owner));
     setScores((current) => winner === "dragon"
       ? { dragon: Math.min(99, current.dragon + 1), unicorn: Math.max(1, current.unicorn - 1) }
       : { dragon: Math.max(1, current.dragon - 1), unicorn: Math.min(99, current.unicorn + 1) });
-    if (team === "dragon" && winner === "dragon") {
-      setDragonLevel((current) => Math.min(3, current + 1) as DragonLevel);
+    if (winner === team) {
+      setEvolutionLevel((current) => Math.min(3, current + 1) as EvolutionLevel);
     }
   };
 
@@ -713,7 +713,7 @@ export default function App() {
           </div>
           <div className="team-status">
             <span>{t.yourTeam}</span>
-            <div>{team === "dragon" ? <PixelDragon level={dragonLevel} /> : <PixelUnicorn />}<strong>{team === "dragon" ? `${t.dragonTeam} · LV.${dragonLevel}` : t.unicornTeam}</strong></div>
+            <div>{team === "dragon" ? <PixelDragon level={guardianLevel} /> : <PixelUnicorn level={guardianLevel} />}<strong>{team === "dragon" ? `${t.dragonTeam} · LV.${guardianLevel}` : `${t.unicornTeam} · LV.${guardianLevel}`}</strong></div>
           </div>
           <button className="change-team" onClick={() => setTeam(null)}>↺ {t.changeTeam}</button>
         </aside>
@@ -761,7 +761,7 @@ export default function App() {
             <PortalRunner
               locale={locale}
               team={team}
-              dragonLevel={dragonLevel}
+              guardianLevel={guardianLevel}
               onCapture={() => {
                 claimPortal(team);
                 setInBattle(false);
@@ -774,7 +774,7 @@ export default function App() {
               mode={gameMode}
               locale={locale}
               team={team}
-              dragonLevel={dragonLevel}
+              guardianLevel={guardianLevel}
               onCapture={() => {
                 claimPortal(team);
                 setInBattle(false);
@@ -795,8 +795,8 @@ export default function App() {
                 <div className="unicorn-move">{unicornMove ? <RpsIcon type={unicornMove} /> : <b>?</b>}</div>
               </div>
               <div className="fighters">
-                <div className={team === "dragon" ? "player fighter" : "enemy fighter"}><PixelDragon level={dragonLevel} /></div>
-                <div className={team === "unicorn" ? "player fighter" : "enemy fighter"}><PixelUnicorn flipped /></div>
+                <div className={team === "dragon" ? "player fighter" : "enemy fighter"}><PixelDragon level={team === "dragon" ? guardianLevel : 3} /></div>
+                <div className={team === "unicorn" ? "player fighter" : "enemy fighter"}><PixelUnicorn flipped level={team === "unicorn" ? guardianLevel : 3} /></div>
               </div>
               <div className="battle-ground"><ManholePortal active /></div>
               {playerWins === 2 && <div className="victory-banner"><div className="reward-chest"><i /><b>✦</b></div><span>PORTAL SECURED</span><h2>{t.victory}</h2><p>{t.defeated} · +240 {t.shards}</p><PixelButton onClick={restart}>{t.reset}</PixelButton></div>}

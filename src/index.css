@@ -1091,3 +1091,8 @@ p, h1, h2, strong, small { text-wrap: pretty; }
   .invader-grid { inset-inline: 14px; }
   .invader-controls { grid-template-columns: 55px 90px 55px; }
 }
+
+/* Early unicorn forms follow the existing evolution size treatment. */
+.unicorn-image.unicorn-level-1 { scale: .68; }
+.unicorn-image.unicorn-level-2 { scale: .86; }
+.evolution-form .unicorn-image { scale: 1; }
