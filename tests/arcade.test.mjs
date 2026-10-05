@@ -71,6 +71,8 @@ test('progress can round-trip and malformed saves fall back safely', async () =>
   const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
   const {parseProgress}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
   const save={shards:240,levels:{dragon:2,unicorn:1},owners:['unicorn','dragon',null,'unicorn','dragon','dragon'],scores:{dragon:49,unicorn:51}};
-  assert.deepEqual(parseProgress(JSON.stringify(save)),save);
+  const migrated={...save,owners:[...save.owners,null,null]};
+  assert.deepEqual(parseProgress(JSON.stringify(save)),migrated);
+  assert.deepEqual(parseProgress(JSON.stringify(migrated)),migrated);
   for(const bad of [null,'bad','{}',JSON.stringify({...save,shards:-1}),JSON.stringify({...save,owners:['dragon']}),JSON.stringify({...save,levels:{dragon:8,unicorn:1}})])assert.equal(parseProgress(bad),null);
 });

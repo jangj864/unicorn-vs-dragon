@@ -1231,7 +1231,7 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .victory-banner { background: #081322f5; border: 3px solid #f0c85c; box-shadow: 8px 8px 0 #020811; }
 @media (max-width:760px) {
   .reward-scene { padding: 20px 16px; }
-  .scene-7.storyboard-stage { min-height: 480px; }
+  .scene-11.storyboard-stage { min-height: 480px; }
   .reward-heading h3 { font-size: 21px; }
   .reward-pedestal .pixel-creature { width: 165px; }
   .reward-display { min-height: 150px; margin: 16px 0; }
@@ -1380,3 +1380,114 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .archive-reader .classified-cover { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
 .archive-reader .classified-cover > * { min-width: 0; }
 @media (max-width:700px) { .archive-reader .classified-cover { grid-template-columns: minmax(0,1fr); } }
+
+/* Cover artwork on the left, dossier identity on the right. */
+@media (min-width:701px) {
+  .archive-reader .classified-cover > img { grid-column: 1; grid-row: 1; border-left: 0; border-right: 1px solid #979077; padding-left: 0; padding-right: 24px; }
+  .archive-reader .classified-cover > .cover-identity { grid-column: 2; grid-row: 1; }
+}
+
+.arcade-briefing { width: min(88%,540px); margin: auto; padding: 20px; background: #101e2b; border: 2px solid #425468; box-shadow: 8px 8px 0 #060c14; }
+.arcade-briefing-header { display: grid; gap: 13px; padding-bottom: 18px; }.arcade-briefing-header span { color: #b1a087; font: 7px var(--arcade); }.arcade-briefing-header b { color: #efd28b; font-size: 22px; }
+.arcade-briefing svg { width: 100%; max-height: 310px; display: block; border: 1px solid #344b5c; }
+.arcade-briefing-controls { display: grid; gap: 10px; padding-top: 18px; }.arcade-briefing-controls span { color: #879eaf; font-size: 12px; }.arcade-briefing-controls b { color: #eee5ce; font-size: 14px; font-weight: 400; }.arcade-briefing > p { margin: 14px 0 0; color: #879eaf; font-size: 11px; }
+.storyboard-progress { grid-template-columns: repeat(12,1fr); }
+@media (max-width:700px) { .arcade-briefing { padding: 12px; margin-block: 16px; }.arcade-briefing-header b { font-size: 18px; }.arcade-briefing svg { max-height: 220px; }.arcade-briefing-controls b { font-size: 12px; } }
+
+/* Landmarks stay registered to the atlas at every viewport size. */
+.nyc-road-atlas { object-fit: fill; }
+.game .zone-node { width: 0; height: 0; overflow: visible; display: block; }
+.game .zone-node .manhole { position: absolute; left: 0; top: 0; translate: -50% -50%; width: 54px; height: 54px; }
+.game .zone-node .zone-name { position: absolute; left: 34px; top: 0; transform: translateY(-50%); width: max-content; max-width: 156px; }
+.game .zone-node:nth-of-type(3) .zone-name,.game .zone-node:nth-of-type(5) .zone-name { left: auto; right: 34px; }
+.game .zone-node .zone-name b { white-space: normal; line-height: 1.45; }
+.game-preview-row { display: flex; align-items: center; gap: 12px; padding: 12px; }
+.game-preview-thumbnail { width: 80px; height: 62px; flex: 0 0 80px; overflow: hidden; background: #0b1926; border: 1px solid #455362; display: grid; place-items: center; }
+.game-preview-thumbnail .rps-icon { width: 45px; height: 45px; fill: #e8c579; }
+.game-preview-thumbnail .pixel-creature { position: static; width: 60px; height: 60px; object-fit: contain; }
+.game-preview-thumbnail .arcade-briefing { width: 100%; padding: 0; margin: 0; border: 0; box-shadow: none; }
+.game-preview-thumbnail .arcade-briefing > :not(svg) { display: none; }
+.game-preview-thumbnail .arcade-briefing svg { width: 100%; height: 60px; border: 0; }
+.game-preview-row > div:last-child { min-width: 0; display: grid; gap: 7px; }.game-preview-row b { display: block; font-size: 14px; line-height: 1.5; color: #eddbaf; }.game-preview-row span { font-size: 6px; }
+
+.landmark-battle { background-position: center; background-size: contain; background-repeat: no-repeat; background-color: #081321; }
+.landmark-battle .battle-sky { display: none; }
+
+/* One undistorted coordinate surface for both maps. */
+.pixel-map { container-type: size; }
+.pixel-map .map-canvas { inset: auto; left: 50%; top: 50%; width: min(100cqw, 136.82cqh); height: min(73.0889cqw, 100cqh); translate: -50% -50%; }
+.pixel-map .nyc-road-atlas { object-fit: contain; }
+.game .zone-node { animation: none; transform: none; }
+.game .zone-node .manhole { width: clamp(24px,4cqw,44px); height: clamp(24px,4cqw,44px); }
+.game .zone-node .zone-name { display: none; pointer-events: none; left: 28px; top: 0; width: max-content; max-width: 170px; }
+.game .zone-node.selected,.game .zone-node:hover,.game .zone-node:focus-visible { z-index: 12; }
+.game .zone-node.selected .zone-name,.game .zone-node:hover .zone-name,.game .zone-node:focus-visible .zone-name { display: block; }
+.game .zone-node:nth-of-type(3) .zone-name,.game .zone-node:nth-of-type(5) .zone-name,.game .zone-node:nth-of-type(6) .zone-name { left: auto; right: 28px; }
+.game .zone-node:focus-visible { outline: none; }
+.game .zone-node:focus-visible .manhole { outline: 2px solid #f0cc84; outline-offset: 3px; }
+.brief-map .zone-node { width: 0; height: 0; transform: none; animation: none; }
+.brief-map .zone-node .manhole { position: absolute; width: 20px; height: 20px; left: -10px; top: -10px; }
+.brief-map .zone-name { display: none; }
+.arcade-briefing canvas { width: 100%; height: auto; display: block; image-rendering: pixelated; border: 2px solid #546577; }
+.game-preview-thumbnail .arcade-briefing > canvas { display: block; height: 60px; border: 0; }
+.arcade-briefing { border: 3px solid #66737b; box-shadow: inset 0 0 0 3px #172b3b, 7px 7px 0 #050c14; background: repeating-linear-gradient(0deg,#142333 0 3px,#172839 3px 4px); }
+.scene-5 .brief-city { background-image: url('./imports/landmark-times-square.png'); opacity: .7; }
+.brief-run { background-image: url('./imports/landmark-washington-square.png'); }
+
+.brief-memory-board { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 22px; aspect-ratio: 4/3; background-size: contain; background-position: center; background-color: #081624; background-repeat: no-repeat; }
+.preview-rune { background: #1d3042e6; border: 2px solid #8d8471; box-shadow: inset 0 0 0 3px #101f2e,inset 0 0 0 5px #435365,3px 3px 0 #050d16; color: #bb9b69; display: grid; place-content: center; text-align: center; }.preview-rune span { font-size: clamp(20px,3vw,42px); }.preview-rune small { font: 6px var(--arcade); }.preview-rune.paired { color: #efdc96; border-color: #96c6b0; background: #284b49e6; }
+.game-preview-thumbnail .arcade-briefing > .brief-memory-board { display: grid; height: 60px; width: 80px; padding: 3px; gap: 2px; }.game-preview-thumbnail .preview-rune span { font-size: 9px; }.game-preview-thumbnail .preview-rune small { display:none; }
+.game .map-canvas:has(.zone-node:hover) .zone-node.selected:not(:hover) .zone-name { display: none; }
+.rps-icon { filter: drop-shadow(2px 3px 0 #08101b); }
+.rps-icon .shade { fill: #8c6b47; }.rps-icon .line { fill: #705d46; }
+.brief-rps-card { border: 3px solid #8e8067; box-shadow: inset 0 0 0 3px #0b1724,inset 0 0 0 5px #3a4d5d,5px 6px 0 #050b12; background: repeating-linear-gradient(0deg,#1d3043ed 0 4px,#22364aed 4px 6px); }
+.landmark-battle .battle-hud { border-bottom: 3px solid #76694d; box-shadow: 0 3px 0 #08111c; background: #0a1827d9; }
+
+/* Cover the viewport without stretching; reserve pan room on both axes. */
+.game .pixel-map .map-canvas { width: max(115cqw, 157.34258271077908cqh); height: max(84.05226209048362cqw, 115cqh); }
+.game .pixel-map .nyc-road-atlas { object-fit: contain; }
+.game .pixel-map .map-canvas { transition: transform .15s ease-out; }
+.game .pixel-map.dragging .map-canvas { transition: none; }
+
+/* Ground both guardians slightly lower in the first archive scene. */
+.archive-reader .evidence-0 .pixel-creature { bottom: 2%; }
+
+/* Scenic backgrounds fill their frames, retaining the source proportions. */
+.landmark-battle { background-size: cover; background-position: center bottom; }
+.brief-memory-board { background-size: cover; background-position: center bottom; }
+.storyboard-stage .brief-city { background-size: cover; background-position: center bottom; opacity: .65; }
+.reward-scene .brief-city { opacity: .4; }
+.brief-run { background-image: linear-gradient(#08162450,#08162450),url('./imports/landmark-washington-square.png'); background-size: cover; background-position: center bottom; }
+.archive-reader .evidence-0 .old-skyline { object-fit: cover; object-position: center bottom; opacity: .7; }
+.archive-species { background-size: cover; }
+.archive-species::before { background: #101b2466; }
+.archive-species.dragon-record::before { background: #201b1966; }
+.archive-reader .evidence-2 { background-size: cover; background-position: center bottom; }
+.archive-reader .evidence-2::before { background: #101b2477; }
+
+/* Larger map emblems, with labels clear of the rim. */
+.game .zone-node .manhole { width: clamp(38px,5.2cqw,58px); height: clamp(38px,5.2cqw,58px); }
+.game .zone-node .zone-name { left: 36px; }
+.game .zone-node:nth-of-type(3) .zone-name,.game .zone-node:nth-of-type(5) .zone-name,.game .zone-node:nth-of-type(6) .zone-name { left: auto; right: 36px; }
+
+/* Times Square street continues through the duel foreground. */
+.landmark-battle .battle-ground { height: 27%; border: 0; background: transparent; display: flex; justify-content: center; align-items: center; padding: 8px 16px 18px; }
+.duel-portal { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; }
+.landmark-battle .battle-ground .manhole { width: clamp(105px,12vw,160px); height: clamp(90px,11vw,140px); transform: none; opacity: 1; filter: drop-shadow(4px 7px 0 #040b14b3); }
+.duel-portal-caption { position: relative; display: grid; gap: 7px; min-width: 174px; padding: 10px 20px 12px; text-align: center; background: #0c1926e8; border: 1px solid #6c6655; box-shadow: 3px 4px 0 #040a12; }
+.duel-portal-caption span { color: #a3a99f; font: 5px/1.6 var(--arcade); letter-spacing: .06em; }
+.duel-portal-caption b { color: #ecd49a; font: 8px/1.5 var(--arcade); }
+.duel-portal-caption i { width: 32px; height: 3px; background: #79bdbd; margin: 1px auto 0; box-shadow: -12px 0 0 #314f59,12px 0 0 #314f59; }
+@media (max-height:740px) { .landmark-battle .battle-ground .manhole { width: 104px; height: 86px; }.duel-portal { gap: 4px; }.duel-portal-caption { padding-block: 6px; gap: 3px; } }
+
+/* Crisp faction selection seal, independent of font glyph rendering. */
+.team-check { width: 30px; height: 30px; top: 14px; right: 14px; border: 2px solid #526273; background: #0c1825; box-shadow: inset 0 0 0 2px #17283a, 3px 3px 0 #040b13; }
+.team-check svg { width: 22px; height: 22px; fill: #101b26; opacity: 0; }
+.team-card.selected .team-check { background: #f1cd72; border-color: #ffebaf; box-shadow: inset 0 -3px 0 #ba8f3b, 3px 3px 0 #040b13; }
+.team-card.selected .team-check svg { opacity: 1; }
+.team-card:hover:not(.selected) .team-check { border-color: #a79570; }
+
+/* Selection appears only after choosing a faction. */
+.team-card.selected .team-check { background: #28251b; border: 2px solid #f2cd70; box-shadow: inset 0 0 0 2px #66512b, 3px 3px 0 #040b13; }
+.team-card.selected .team-check svg { fill: #ffda75; opacity: 1; }
+.team-card.dragon.selected,.team-card.unicorn.selected { border-color: #f2cd70; box-shadow: 0 0 0 3px var(--night), 0 0 0 5px #d6ad52, 8px 8px 0 #050b14; }

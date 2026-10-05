@@ -1,3 +1,12 @@
+import GamePreview from "./game/GamePreview";
+import landmark0 from "./imports/landmark-central-park.png";
+import landmark1 from "./imports/landmark-times-square.png";
+import landmark2 from "./imports/landmark-empire-state.png";
+import landmark3 from "./imports/landmark-washington-square.png";
+import landmark4 from "./imports/landmark-soho.png";
+import landmark5 from "./imports/landmark-wall-street.png";
+import landmark6 from "./imports/landmark-dumbo.png";
+import landmark7 from "./imports/landmark-liberty.png";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ArcadeGame from "./game/ArcadeGame";
 import { rpsResult } from "./game/engine";
@@ -127,13 +136,17 @@ const copy = {
   },
 };
 
+const landmarkBackgrounds = [landmark0, landmark1, landmark2, landmark3, landmark4, landmark5, landmark6, landmark7];
+
 const zones = [
-  { id: 0, x: 63, y: 22, ko: "센트럴 파크", en: "Central Park", danger: 1, owner: "unicorn" as Team, locked: false, game: "snake" as GameMode },
-  { id: 1, x: 56, y: 40, ko: "타임스 스퀘어", en: "Times Square", danger: 2, owner: "dragon" as Team, locked: false, game: "rps" as GameMode },
-  { id: 2, x: 61, y: 49, ko: "그랜드 센트럴", en: "Grand Central", danger: 2, owner: null, locked: false, game: "breakout" as GameMode },
-  { id: 3, x: 50, y: 56, ko: "첼시", en: "Chelsea", danger: 3, owner: "unicorn" as Team, locked: false, game: "runner" as GameMode },
-  { id: 4, x: 51, y: 67, ko: "소호", en: "SoHo", danger: 3, owner: null, locked: false, game: "memory" as GameMode },
-  { id: 5, x: 46, y: 81, ko: "월 스트리트", en: "Wall Street", danger: 4, owner: "dragon" as Team, locked: false, game: "invader" as GameMode },
+  { id: 0, x: 63, y: 23, ko: "센트럴파크", en: "Central Park", danger: 1, owner: "unicorn" as Team, locked: false, game: "snake" as GameMode },
+  { id: 1, x: 56, y: 42, ko: "타임스퀘어", en: "Times Square", danger: 2, owner: "dragon" as Team, locked: false, game: "rps" as GameMode },
+  { id: 2, x: 56, y: 50, ko: "엠파이어스테이트 빌딩", en: "Empire State Building", danger: 2, owner: null, locked: false, game: "breakout" as GameMode },
+  { id: 3, x: 51, y: 61, ko: "워싱턴 스퀘어 파크", en: "Washington Square Park", danger: 3, owner: "unicorn" as Team, locked: false, game: "runner" as GameMode },
+  { id: 4, x: 50, y: 68, ko: "소호", en: "SoHo", danger: 3, owner: null, locked: false, game: "memory" as GameMode },
+  { id: 5, x: 46, y: 78, ko: "월스트리트", en: "Wall Street", danger: 4, owner: "dragon" as Team, locked: false, game: "invader" as GameMode },
+  { id: 6, x: 57, y: 79, ko: "브루클린 덤보", en: "Brooklyn DUMBO", danger: 3, owner: null, locked: false, game: "runner" as GameMode },
+  { id: 7, x: 17, y: 93, ko: "자유의 여신상", en: "Statue of Liberty", danger: 4, owner: null, locked: false, game: "invader" as GameMode },
 ];
 
 function RpsIcon({ type }: { type: Rps }) {
@@ -192,8 +205,8 @@ function PixelButton({ children, onClick, secondary = false, disabled = false }:
 function TeamCard({ team, locale, selected, onClick }: { team: Team; locale: Locale; selected: boolean; onClick: () => void }) {
   const t = copy[locale];
   return (
-    <button className={`team-card ${team} ${selected ? "selected" : ""}`} onClick={onClick}>
-      <span className="team-check">{selected ? "✓" : ""}</span>
+    <button className={`team-card ${team} ${selected ? "selected" : ""}`} onClick={onClick} aria-pressed={selected}>
+      <span className="team-check" aria-hidden="true">{selected && <svg viewBox="0 0 16 16" shapeRendering="crispEdges"><path d="M2 7h3v3h2V8h2V6h2V4h3v4h-2v2h-2v2H8v2H5v-2H3v-2H2z" /></svg>}</span>
       <div className="team-sprite">{team === "unicorn" ? <PixelUnicorn flipped level={3} /> : <PixelDragon level={3} />}</div>
       <span className="team-type">{locale === "ko" ? (team === "unicorn" ? "빛의 수호자" : "불꽃의 정복자") : (team === "unicorn" ? "GUARDIANS OF LIGHT" : "CONQUERORS OF FLAME")}</span>
       <strong>{team === "unicorn" ? t.unicornTeam : t.dragonTeam}</strong>
@@ -308,7 +321,7 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
             team={team}
             scene={step - 5}
             onPrevious={() => setStep((current) => Math.max(4, current - 1))}
-            onNext={() => step < 12 ? setStep((current) => current + 1) : onComplete(team)}
+            onNext={() => step < 5 + storyboardText[locale].length - 1 ? setStep((current) => current + 1) : onComplete(team)}
           />
         )}</>}
       </section>
@@ -339,7 +352,11 @@ const storyboardText = {
     ["05 · 도시 탐색", "상세 지도에서 점령 현황을 확인하고 다음 작전 구역을 선택하세요."],
     ["06 · 포탈 결투", "가위바위보에서 먼저 2승을 거두면 포탈 방어막이 해제됩니다."],
     ["07 · 포탈 러너", "도시 지붕과 지하 배관을 뛰어넘고 스타 샤드를 회수하세요."],
-    ["08 · 점령과 보상", "게임을 클리어하면 맨홀에 진영의 문양이 새겨지고 샤드와 진화 보상을 받습니다."],
+    ["08 · 서펀트 스네이크", "방향키 / WASD로 샤드 6개를 모으세요. 벽과 자신의 꼬리를 피하세요."],
+    ["09 · 브릭 브레이커", "좌우 키 또는 드래그로 패들을 움직이고 SPACE로 발사하세요. 벽돌 24개를 모두 깨면 승리합니다."],
+    ["10 · 룬 메모리", "카드를 눌러 같은 룬 6쌍을 찾으세요. 120초 안에, 8번째 실수 전에 모든 쌍을 맞히세요."],
+    ["11 · 스카이 인베이더", "좌우로 움직이고 SPACE를 길게 눌러 발사하세요. 적의 탄환을 피하며 적 12기를 모두 격추하세요."],
+    ["12 · 점령과 보상", "게임을 클리어하면 맨홀에 진영의 문양이 새겨지고 샤드와 진화 보상을 받습니다."],
   ],
   en: [
     ["01 · ENCOUNTER", "Two hidden species detect the same manhole signal beneath Manhattan."],
@@ -349,12 +366,23 @@ const storyboardText = {
     ["05 · CITY SEARCH", "Read the tactical map, check control, and choose the next operation zone."],
     ["06 · PORTAL DUEL", "Win two rounds of rock-paper-scissors to break the portal shield."],
     ["07 · PORTAL RUNNER", "Leap across rooftops and pipes while recovering star shards."],
-    ["08 · CLAIM & REWARD", "Clear the game to engrave your faction on the manhole and earn shards and evolution rewards."],
+    ["08 · SERPENT SNAKE", "Use arrows / WASD to collect 6 shards. Avoid walls and your tail."],
+    ["09 · BRICK BREAKER", "Move with arrows or drag; SPACE launches the ball. Break all 24 bricks."],
+    ["10 · RUNE MEMORY", "Tap cards to match all 6 pairs in 120 seconds, before your eighth mismatch."],
+    ["11 · SKY INVADERS", "Move left and right, hold SPACE to fire. Dodge shots and defeat all 12 invaders."],
+    ["12 · CLAIM & REWARD", "Clear the game to engrave your faction on the manhole and earn shards and evolution rewards."],
   ],
 };
 
+function ArcadeBriefing({ index, locale }: { index: number; locale: Locale }) {
+  const goals = locale === "ko" ? ["샤드 6개 수집", "벽돌 24개 파괴", "같은 룬 6쌍 발견", "적 12기 격추"] : ["COLLECT 6 SHARDS", "BREAK 24 BRICKS", "MATCH 6 PAIRS", "DEFEAT 12 INVADERS"];
+  const controls = ["↑ ↓ ← → / WASD", "← → / DRAG + SPACE", "CLICK / TAP", "← → + SPACE"];
+  return <div className="arcade-briefing"><div className="arcade-briefing-header"><span>ARCADE / 0{index + 3}</span><b>{goals[index]}</b></div>
+    {index === 2 ? <div className="brief-memory-board" style={{backgroundImage: `linear-gradient(#08162450, #08162450), url("${landmarkBackgrounds[4]}")`}}>{Array.from({length:12},(_,i)=><div className={i===1||i===6?"preview-rune paired":"preview-rune"} key={i}><span>{i===1||i===6?"✦":"◇"}</span><small>{String(i+1).padStart(2,"0")}</small></div>)}</div> : <GamePreview mode={(["snake","breakout","memory","invader"] as const)[index]} background={landmarkBackgrounds[[0,2,4,5][index]]} label={goals[index]} />}<div className="arcade-briefing-controls"><span>{locale === "ko" ? "조작 방법" : "CONTROLS"}</span><b>{controls[index]}</b></div><p>{locale === "ko" ? "모바일에서는 화면의 조작 버튼을 사용하세요" : "ON MOBILE, USE THE ON-SCREEN CONTROLS"}</p></div>;
+}
+
 function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { locale: Locale; team: Team; scene: number; onPrevious: () => void; onNext: () => void }) {
-  const safeScene = Math.min(7, Math.max(0, scene));
+  const safeScene = Math.min(storyboardText[locale].length - 1, Math.max(0, scene));
   const [title, body] = storyboardText[locale][safeScene];
   const guardian = team === "dragon" ? <PixelDragon level={3} /> : <PixelUnicorn level={3} />;
   const evolutionGuardian = (level: number) => team === "dragon"
@@ -371,16 +399,17 @@ function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { local
         {safeScene === 4 && <div className="brief-map pixel-map"><div className="map-canvas"><img className="nyc-road-atlas" src={nycTacticalMap} alt="" draggable={false} />{zones.map((item) => <div key={item.id} className="zone-node owner-guide" style={{ left: `${item.x}%`, top: `${item.y}%` }}><ManholePortal /><span className="zone-name owner-guide"><b>{locale === "ko" ? item.ko : item.en}</b></span></div>)}</div></div>}
         {safeScene === 5 && <><div className="brief-city" aria-hidden="true" /><div className="brief-rps">{(["rock", "paper", "scissors"] as Rps[]).map((move) => <div className="brief-rps-card" key={move}><RpsIcon type={move} /><b>{copy[locale][move]}</b></div>)}</div><div className="brief-guardian">{guardian}</div><span className="brief-rule">{locale === "ko" ? "2승을 먼저 달성하면 포탈 확보" : "FIRST TO 2 WINS · CAPTURE THE PORTAL"}</span></>}
         {safeScene === 6 && <div className="brief-run"><div className="run-guardian">{guardian}</div><span className="brief-coin">✦</span><i className="brief-pipe" /><ManholePortal active /></div>}
-        {safeScene === 7 && <div className={`reward-scene reward-${team}`}><div className="brief-city" aria-hidden="true" /><div className="reward-heading"><span>MISSION COMPLETE</span><h3>{locale === "ko" ? "새로운 구역을 확보했습니다" : "DISTRICT SECURED"}</h3><p>{locale === "ko" ? "당신의 진영이 뉴욕에 한 걸음 더 가까워졌습니다" : "One more district. One step closer to New York."}</p></div><div className="reward-display"><div className="reward-pedestal">{guardian}</div><div className="reward-loot"><ManholePortal owner={team} /><PixelChest /></div></div><div className="reward-summary"><div><small>STAR SHARDS</small><strong>+240 <span>✦</span></strong></div><div><small>{locale === "ko" ? "수호자 진화" : "GUARDIAN EVOLUTION"}</small><strong>LV +1 <span>↑</span></strong></div></div><span className="reward-note">{locale === "ko" ? "게임 클리어 → 포탈 점령 → 보상 획득 · 최대 LV.3" : "CLEAR → CLAIM → COLLECT · MAX LV.3"}</span></div>}
+        {safeScene >= 7 && safeScene <= 10 && <ArcadeBriefing index={safeScene - 7} locale={locale} />}
+        {safeScene === 11 && <div className={`reward-scene reward-${team}`}><div className="brief-city" aria-hidden="true" /><div className="reward-heading"><span>MISSION COMPLETE</span><h3>{locale === "ko" ? "새로운 구역을 확보했습니다" : "DISTRICT SECURED"}</h3><p>{locale === "ko" ? "당신의 진영이 뉴욕에 한 걸음 더 가까워졌습니다" : "One more district. One step closer to New York."}</p></div><div className="reward-display"><div className="reward-pedestal">{guardian}</div><div className="reward-loot"><ManholePortal owner={team} /><PixelChest /></div></div><div className="reward-summary"><div><small>STAR SHARDS</small><strong>+240 <span>✦</span></strong></div><div><small>{locale === "ko" ? "수호자 진화" : "GUARDIAN EVOLUTION"}</small><strong>LV +1 <span>↑</span></strong></div></div><span className="reward-note">{locale === "ko" ? "게임 클리어 → 포탈 점령 → 보상 획득 · 최대 LV.3" : "CLEAR → CLAIM → COLLECT · MAX LV.3"}</span></div>}
       </div>
       <div className="storyboard-copy">
         <span className="pixel-label">FIELD BRIEFING // {String(safeScene + 1).padStart(2, "0")}</span>
         <h2>{title}</h2>
         <p>{body}</p>
-        <div className="storyboard-progress">{Array.from({ length: 8 }).map((_, index) => <i key={index} className={index <= safeScene ? "on" : ""} />)}</div>
+        <div className="storyboard-progress">{Array.from({ length: storyboardText[locale].length }).map((_, index) => <i key={index} className={index <= safeScene ? "on" : ""} />)}</div>
         <div className="storyboard-actions">
           <PixelButton secondary onClick={onPrevious}>◀ {locale === "ko" ? "이전" : "BACK"}</PixelButton>
-          <PixelButton onClick={onNext}>{safeScene === 7 ? (locale === "ko" ? "작전 시작" : "START MISSION") : (locale === "ko" ? "다음 장면" : "NEXT SCENE")} ▶</PixelButton>
+          <PixelButton onClick={onNext}>{safeScene === storyboardText[locale].length - 1 ? (locale === "ko" ? "작전 시작" : "START MISSION") : (locale === "ko" ? "다음 장면" : "NEXT SCENE")} ▶</PixelButton>
         </div>
       </div>
     </section>
@@ -396,8 +425,16 @@ const gameInfo: Record<GameMode, { ko: string; en: string; code: string }> = {
   invader: { ko: "스카이 인베이더", en: "Sky Invader", code: "INV–06" },
 };
 
+function mapPanBounds(viewport: HTMLDivElement, zoom: number) {
+  const canvas = viewport.querySelector<HTMLElement>(".map-canvas");
+  return {
+    maxX: Math.max(0, ((canvas?.offsetWidth ?? viewport.clientWidth) * zoom - viewport.clientWidth) / 2),
+    maxY: Math.max(0, ((canvas?.offsetHeight ?? viewport.clientHeight) * zoom - viewport.clientHeight) / 2),
+  };
+}
+
 export default function App() {
-  const [locale, setLocale] = useState<Locale>("ko");
+  const [locale, setLocale] = useState<Locale>("en");
   const [team, setTeam] = useState<Team | null>(null);
   const [savedProgress] = useState(readProgress);
   const [levels, setLevels] = useState<Record<Team, EvolutionLevel>>(savedProgress?.levels ?? { dragon: 1, unicorn: 1 });
@@ -437,14 +474,15 @@ export default function App() {
       const viewport = mapViewportRef.current;
       if (!viewport) return;
       setMapView((current) => {
-        const maxX = viewport.clientWidth * (current.zoom - 1) / 2;
-        const maxY = viewport.clientHeight * (current.zoom - 1) / 2;
+        const { maxX, maxY } = mapPanBounds(viewport, current.zoom);
         return { ...current, x: Math.min(maxX, Math.max(-maxX, current.x)), y: Math.min(maxY, Math.max(-maxY, current.y)) };
       });
     };
-    window.addEventListener("resize", containMap);
-    return () => window.removeEventListener("resize", containMap);
-  }, []);
+    const observer = new ResizeObserver(containMap);
+    if (mapViewportRef.current) observer.observe(mapViewportRef.current);
+    containMap();
+    return () => observer.disconnect();
+  }, [team, inBattle]);
 
   useEffect(() => {
     try { localStorage.setItem(PROGRESS_KEY, JSON.stringify({ shards, levels, owners, scores })); } catch { /* Play remains available when storage is unavailable. */ }
@@ -502,8 +540,7 @@ export default function App() {
       const zoom = Math.min(2.4, Math.max(1, current.zoom + amount));
       const viewport = mapViewportRef.current;
       if (!viewport) return { ...current, zoom };
-      const maxX = viewport.clientWidth * (zoom - 1) / 2;
-      const maxY = viewport.clientHeight * (zoom - 1) / 2;
+      const { maxX, maxY } = mapPanBounds(viewport, zoom);
       return { zoom, x: Math.min(maxX, Math.max(-maxX, current.x)), y: Math.min(maxY, Math.max(-maxY, current.y)) };
     });
   };
@@ -522,8 +559,7 @@ export default function App() {
     const nextX = mapDrag.current.originX + event.clientX - mapDrag.current.startX;
     const nextY = mapDrag.current.originY + event.clientY - mapDrag.current.startY;
     setMapView((current) => {
-      const maxX = viewport.clientWidth * (current.zoom - 1) / 2;
-      const maxY = viewport.clientHeight * (current.zoom - 1) / 2;
+      const { maxX, maxY } = mapPanBounds(viewport, current.zoom);
       return { ...current, x: Math.min(maxX, Math.max(-maxX, nextX)), y: Math.min(maxY, Math.max(-maxY, nextY)) };
     });
   };
@@ -601,7 +637,7 @@ export default function App() {
                 >
                 <img className="nyc-road-atlas" src={nycTacticalMap} alt="" draggable={false} />
                 {zones.map((item) => (
-                  <button key={item.id} className={`zone-node owner-${owners[item.id] ?? "neutral"} ${zoneId === item.id ? "selected" : ""} ${item.locked ? "locked" : ""}`} style={{ left: `${item.x}%`, top: `${item.y}%` }} aria-pressed={zoneId === item.id} onClick={() => !item.locked && setZoneId(item.id)}>
+                  <button key={item.id} className={`zone-node owner-${owners[item.id] ?? "neutral"} ${zoneId === item.id ? "selected" : ""} ${item.locked ? "locked" : ""}`} style={{ left: `${item.x}%`, top: `${item.y}%` }} aria-label={`${locale === "ko" ? item.ko : item.en} · ${locale === "ko" ? gameInfo[item.game].ko : gameInfo[item.game].en}`} aria-pressed={zoneId === item.id} onClick={() => !item.locked && setZoneId(item.id)}>
                     <ManholePortal owner={owners[item.id]} />
                     <span className={`zone-name owner-${owners[item.id] ?? "neutral"}`}><b>{locale === "ko" ? item.ko : item.en}</b><small>{item.locked ? t.locked : owners[item.id] ? `${owners[item.id] === "unicorn" ? t.unicornTeam : t.dragonTeam}` : `${t.neutral} · LV.${item.danger}`}</small>{zoneId === item.id && <em className="zone-selected-label">✓ {locale === "ko" ? "선택됨" : "SELECTED"}</em>}</span>
                   </button>
@@ -613,13 +649,14 @@ export default function App() {
             <ArcadeGame
               key={`${zoneId}-${gameMode}`}
               mode={gameMode}
+              background={landmarkBackgrounds[zone.id]}
               locale={locale}
               guardian={team === "dragon" ? dragonArt[guardianLevel] : unicornArt[guardianLevel]}
               onCapture={() => { claimPortal(team); setInBattle(false); }}
               onExit={() => setInBattle(false)}
             />
           ) : (
-            <div className="battle-arena">
+            <div className="battle-arena landmark-battle" style={{ backgroundImage: `linear-gradient(#08132140, #08132155), url("${landmarkBackgrounds[zone.id]}")` }}>
               <div className="battle-sky"><div className="pixel-moon" /><div className="skyline-far" /></div>
               <div className="battle-hud">
                 <div className="dragon-hud"><span>{t.dragonTeam}</span><b>{dragonWins} WIN</b><div className="round-pips dragon-pips"><i className={dragonWins > 0 ? "on" : ""} /><i className={dragonWins > 1 ? "on" : ""} /></div></div>
@@ -635,7 +672,7 @@ export default function App() {
                 <div className={team === "dragon" ? "player fighter" : "enemy fighter"}><PixelDragon level={team === "dragon" ? guardianLevel : 3} /></div>
                 <div className={team === "unicorn" ? "player fighter" : "enemy fighter"}><PixelUnicorn flipped level={team === "unicorn" ? guardianLevel : 3} /></div>
               </div>
-              <div className="battle-ground"><ManholePortal active /></div>
+              <div className="battle-ground"><div className="duel-portal"><ManholePortal active /><div className="duel-portal-caption"><span>NYC / TIMES SQUARE</span><b>{locale === "ko" ? "포탈 쟁탈전" : "PORTAL CONTEST"}</b><i aria-hidden="true" /></div></div></div>
               {playerWins === 2 && <div className="victory-banner"><div className="victory-loot"><ManholePortal owner={team} /><PixelChest /></div><span>PORTAL SECURED</span><h2>{t.victory}</h2><p>{t.defeated} · +240 {t.shards}</p><PixelButton onClick={restart}>{t.reset}</PixelButton></div>}
               {enemyWins === 2 && <div className="victory-banner defeated-banner"><span>×</span><h2>{locale === "ko" ? "패배" : "DEFEAT"}</h2><p>{locale === "ko" ? "상대 진영이 포탈을 점령했습니다." : "The rival faction captured this portal."}</p><PixelButton onClick={restart}>{t.reset}</PixelButton></div>}
             </div>
@@ -647,9 +684,9 @@ export default function App() {
             <>
               <span className="pixel-label">{t.selected}</span>
               <h2>{locale === "ko" ? zone.ko : zone.en}</h2>
-              <div className="portal-inspector"><ManholePortal owner={owners[zone.id]} /><div className="street-lines" /></div>
+              <div className="portal-inspector" style={{ backgroundImage: `linear-gradient(#08132150, #08132180), url("${landmarkBackgrounds[zone.id]}")`, backgroundSize: "cover", backgroundPosition: "center" }}><ManholePortal owner={owners[zone.id]} /><div className="street-lines" /></div>
               <div className={`portal-meta owner-${owners[zone.id] ?? "neutral"}`}><span>{t.portal}</span><b>NYC–0{zone.id + 1}</b><small>{owners[zone.id] ? `${t.occupied} // ${owners[zone.id]?.toUpperCase()}` : `${t.neutral} // ${zone.danger * 240} PX DEPTH`}</small></div>
-              <div className="portal-game"><span>ARCADE // {gameInfo[zone.game].code}</span><b>{locale === "ko" ? gameInfo[zone.game].ko : gameInfo[zone.game].en}</b></div>
+              <div className="portal-game game-preview-row"><div className="game-preview-thumbnail" aria-hidden="true">{zone.game === "rps" ? <RpsIcon type="scissors" /> : zone.game === "runner" ? <PixelDragon level={3} /> : <ArcadeBriefing index={["snake", "breakout", "memory", "invader"].indexOf(zone.game)} locale={locale} />}</div><div><span>ARCADE // {gameInfo[zone.game].code}</span><b>{locale === "ko" ? gameInfo[zone.game].ko : gameInfo[zone.game].en}</b></div></div>
               <PixelButton onClick={() => { restart(); setGameMode(zone.game); setInBattle(true); }}>{locale === "ko" ? "게임 시작" : "START GAME"} <span>▶</span></PixelButton>
             </>
           ) : gameMode === "runner" ? (
