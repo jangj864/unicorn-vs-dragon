@@ -1,8 +1,6 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -32,7 +30,12 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm test
       - run: pnpm build
+        env:
+          VITE_SUPABASE_URL: https://zlgwzaybzaivqhvvojaa.supabase.co
+          # Browser-safe publishable key; never use a secret/service-role key here.
+          VITE_SUPABASE_ANON_KEY: sb_publishable_z1kehTkMN2F3CSoZdNpqyg_6QIa3EJ9
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

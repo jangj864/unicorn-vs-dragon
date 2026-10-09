@@ -76,3 +76,67 @@ test('progress can round-trip and malformed saves fall back safely', async () =>
   assert.deepEqual(parseProgress(JSON.stringify(migrated)),migrated);
   for(const bad of [null,'bad','{}',JSON.stringify({...save,shards:-1}),JSON.stringify({...save,owners:['dragon']}),JSON.stringify({...save,levels:{dragon:8,unicorn:1}})])assert.equal(parseProgress(bad),null);
 });
+
+test('survival counts upwards, automatically launches, and continues into another wave',()=>{
+  const g=createGame('breakout',Math.random,true);
+  for(let i=0;i<30;i++)stepGame(g,blankInput(),.04);
+  assert.equal(g.ball.docked,false);assert.ok(g.elapsed>1);assert.equal(g.time,g.elapsed);
+  g.bricks.forEach(b=>b.alive=false);stepGame(g,blankInput(),.02);
+  assert.equal(g.wave,2);assert.equal(g.status,'running');assert.equal(g.bricks.filter(b=>b.alive).length,24);
+  const inv=createGame('invader',Math.random,true);inv.enemies.forEach(e=>e.alive=false);stepGame(inv,blankInput(),.02);
+  assert.equal(inv.wave,2);assert.equal(inv.enemies.filter(e=>e.alive).length,12);
+});
+test('survival runner replenishes hazards beyond the old finish line',()=>{
+  const g=createGame('runner',Math.random,true);g.distance=3300;g.obstacles=[];stepGame(g,blankInput(),.02);
+  assert.equal(g.status,'running');assert.ok(g.obstacles.length>0);assert.ok(g.obstacles.at(-1)>g.distance+900);
+});
+test('memory inactivity costs lives and a solved survival board starts a new wave',()=>{
+  const g=createGame('memory',Math.random,true);g.pressure=10;stepGame(g,blankInput(),.02);assert.equal(g.lives,7);
+  g.matched=Array.from({length:12},(_,i)=>i);stepGame(g,blankInput(),.02);assert.equal(g.wave,2);assert.equal(g.matched.length,0);assert.equal(g.status,'running');
+  g.lives=1;g.pressure=10;stepGame(g,blankInput(),.02);assert.equal(g.status,'lost');
+  const elapsed=g.elapsed;stepGame(g,blankInput(),.02);assert.equal(g.elapsed,elapsed);
+});
+test('leaderboards sort descending, retain earlier ties, cap at ten, and format time',async()=>{
+  const source=fs.readFileSync(new URL('../src/game/rankings.ts',import.meta.url),'utf8').replaceAll('import.meta.env','({})');
+  const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
+  const {rankEntries,formatRecord}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+  const entries=Array.from({length:12},(_,i)=>({nickname:`P${i}`,player_id:`${i}`,team:'dragon',value:i,created_at:'2026-01-01'}));
+  const ordered=rankEntries(entries);assert.equal(ordered.length,10);assert.equal(ordered[0].value,11);
+  const tied=rankEntries([{...entries[0],value:100,created_at:'2026-02-01'},{...entries[1],value:100}]);assert.equal(tied[0].nickname,'P1');
+  assert.equal(formatRecord(61500,false),'1:01.5');assert.equal(formatRecord(7,true),'7 W');
+});
+
+test('submitted records persist and portal ownership follows the best record only',async()=>{
+  const source=fs.readFileSync(new URL('../src/game/rankings.ts',import.meta.url),'utf8').replaceAll('import.meta.env','({})');
+  const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
+  const {submitRecord,fetchBoards}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+  const memory=new Map();globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v)};
+  try{
+    await submitRecord(1,'Alice','dragon',5);
+    let boards=await submitRecord(1,'Bob','unicorn',4);assert.equal(boards[1][0].team,'dragon');
+    boards=await submitRecord(1,'Bob','unicorn',6);assert.equal(boards[1][0].team,'unicorn');
+    boards=await submitRecord(1,'Bob','dragon',3);assert.equal(boards[1][0].value,6);assert.equal(boards[1][0].team,'unicorn');
+    assert.deepEqual(await fetchBoards(),boards);
+    assert.equal(boards[0].length,0);
+    await assert.rejects(submitRecord(1,' ','dragon',7));
+  }finally{delete globalThis.localStorage;}
+});
+
+test('online submission accepts an empty success response then refreshes the ranking',async()=>{
+  const source=fs.readFileSync(new URL('../src/game/rankings.ts',import.meta.url),'utf8').replaceAll('import.meta.env','({VITE_SUPABASE_URL:"https://example.invalid",VITE_SUPABASE_ANON_KEY:"test-public"})');
+  const code=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ES2022,target:ts.ScriptTarget.ES2022}}).outputText;
+  const savedFetch=globalThis.fetch;
+  const memory=new Map();globalThis.localStorage={getItem:k=>memory.get(k)??null,setItem:(k,v)=>memory.set(k,v)};
+  const paths=[];
+  globalThis.fetch=async(url)=>{
+    paths.push(url);
+    if(url.endsWith('/auth/v1/signup'))return new Response(JSON.stringify({access_token:'test-session',refresh_token:'test-refresh',expires_in:3600}));
+    if(url.endsWith('/portal_submit_record'))return new Response(null,{status:204});
+    return new Response(JSON.stringify([{zone_id:1,nickname:'Test',team:'dragon',value:1,player_id:'test',created_at:'2026-10-09'}]));
+  };
+  try{
+    const {submitRecord}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
+    const boards=await submitRecord(1,'Test','dragon',1);
+    assert.equal(boards[1][0].nickname,'Test');assert.equal(paths.length,3);
+  }finally{globalThis.fetch=savedFetch;delete globalThis.localStorage;}
+});

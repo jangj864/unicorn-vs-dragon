@@ -1,3 +1,7 @@
+import ArchiveText from "./game/ArchiveText";
+import BootScreen from "./game/BootScreen";
+import Leaderboard, { RecordEntry } from "./game/Leaderboard";
+import { fetchBoards, submitRecord, type Boards } from "./game/rankings";
 import GamePreview from "./game/GamePreview";
 import landmark0 from "./imports/landmark-central-park.png";
 import landmark1 from "./imports/landmark-times-square.png";
@@ -252,23 +256,23 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
   const turnPage = () => navigateFile(step + 1);
   const turnBack = () => navigateFile(step - 1);
 
-  const renderFile = (page: number) => (page === 0 ? (
+  const renderFile = (page: number, preview = false) => (page === 0 ? (
               <article className="classified-cover" key="cover">
-                <div className="cover-identity"><span>NYC / OCCULT DEFENSE BUREAU</span><h1>{locale === "ko" ? "기밀 조사 보고서" : "CLASSIFIED REPORT"}</h1><p>{locale === "ko" ? "맨해튼 비인간 활동 기록" : "MANHATTAN NON-HUMAN ACTIVITY"}</p><div className="cover-rule" /><b>CASE FILE / 00–X</b><small>AUTHORIZED PERSONNEL ONLY<br />ARCHIVE RELEASE / 2091</small></div><img src={classifiedCover} alt={locale === "ko" ? "기밀 조사 보고서 표지" : "Classified investigation report cover"} draggable={false} />
+                <div className="cover-identity"><span>NYC / OCCULT DEFENSE BUREAU</span><h1><ArchiveText text={locale === "ko" ? "기밀 조사 보고서" : "CLASSIFIED REPORT"} instant={preview} /></h1><p>{locale === "ko" ? "맨해튼 비인간 활동 기록" : "MANHATTAN NON-HUMAN ACTIVITY"}</p><div className="cover-rule" /><b>CASE FILE / 00–X</b><small>AUTHORIZED PERSONNEL ONLY<br />ARCHIVE RELEASE / 2091</small></div><img src={classifiedCover} alt={locale === "ko" ? "기밀 조사 보고서 표지" : "Classified investigation report cover"} draggable={false} />
               </article>
             ) : <article className="classified-file" key={page}>
               <div className="file-edge" />
               <div className="file-meta"><span>{story[page - 1].code}</span><span>09.28.2091</span></div>
               <div className="redaction">██████ █████ ███</div>
               <p className="file-kicker">NYC // NON-HUMAN ACTIVITY</p>
-              <h1>{story[page - 1].title}</h1>
-              <p className="file-lead">{story[page - 1].lead}</p>
+              <h1><ArchiveText text={story[page - 1].title} instant={preview} /></h1>
+              <p className="file-lead"><ArchiveText text={story[page - 1].lead} delay={650} instant={preview} /></p>
               <div className={`evidence evidence-${page - 1}`}>
                 {page === 1 && <><img className="old-skyline" src={classifiedNycStreet} alt="" draggable={false} /><PixelUnicorn /><PixelDragon flipped /></>}
                 {page === 2 && <><div className="archive-species unicorn-record"><span>01 / UNICORN</span><PixelUnicorn /><b>{locale === "ko" ? "버려진 고층 건물" : "ABANDONED TOWERS"}</b></div><div className="archive-species dragon-record"><span>02 / DRAGON</span><PixelDragon flipped /><b>{locale === "ko" ? "폐쇄된 지하철 터널" : "SEALED SUBWAY TUNNELS"}</b></div></>}
                 {page === 3 && <><div className="rift-location">MANHATTAN / BELOW STREET LEVEL</div><div className="rift-platform"><ManholePortal active /></div><div className="rift-caption"><span>PORTAL 001</span><b>{locale === "ko" ? "봉인 해제 · 진입 가능" : "SEAL BROKEN · ENTRY OPEN"}</b></div></>}
               </div>
-              <p className="file-body">{story[page - 1].body}</p>
+              <p className="file-body"><ArchiveText text={story[page - 1].body} delay={2100} instant={preview} /></p>
               <div className="file-footer"><span>PAGE 0{page} / 03</span><strong>{story[page - 1].stamp}</strong></div>
             </article>);
 
@@ -279,20 +283,20 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
         <button className="mini-logo home-logo" onClick={() => { turnTimers.current.forEach(window.clearTimeout); setIsTurning(false); setTurnTarget(null); setStep(0); setTeam(null); }} aria-label={locale === "ko" ? "메인 화면으로" : "Go to home"}>
           <span>DRAGON</span><i>VS</i><span>UNICORN</span>
         </button>
-        <div className="onboarding-tools">{step >= 5 && team && <button className="skip-briefing" onClick={() => onComplete(team)}>{locale === "ko" ? "설명 건너뛰기" : "SKIP BRIEFING"} →</button>}{step < 4 && <button className="skip-briefing" onClick={() => { turnTimers.current.forEach(window.clearTimeout); setIsTurning(false); setTurnTarget(null); setStep(4); }}>{locale === "ko" ? "진영 선택으로" : "CHOOSE FACTION"} →</button>}<LanguageToggle locale={locale} onChange={setLocale} /></div>
+        <div className="onboarding-tools"><LanguageToggle locale={locale} onChange={setLocale} /></div>
       </header>
       <section className="onboarding-content">
         {step < 4 ? (
           <div className={`classified-scene archive-reader ${isTurning ? `page-turning ${turnDirection === "back" ? "page-turning-back" : ""}` : ""}`}>
             {step > 0 && <div className="archive-status"><span>NYC OCCULT DEFENSE BUREAU</span><b>SECURITY LEVEL // 08</b></div>}
-            <div className="file-stack" aria-live="polite">
+            <div className="file-stack">
             <div className={`book-sheet current-sheet ${isTurning && turnDirection === "next" ? "sheet-outgoing" : ""}`}>{renderFile(step)}</div>
-            {turnTarget !== null && turnTarget < 4 && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget)}</div>}
+            {turnTarget !== null && turnTarget < 4 && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget, true)}</div>}
             <div className="page-underlay" aria-hidden="true" />
             </div>
             <div className="story-controls">
               {step > 0 ? <PixelButton secondary onClick={turnBack} disabled={isTurning}><span>◀</span> {locale === "ko" ? "이전 문서" : "PREVIOUS FILE"}</PixelButton> : <span className="story-nav-spacer" />}
-              <PixelButton onClick={turnPage} disabled={isTurning}>{step === 0 ? (locale === "ko" ? "문서 열기" : "OPEN REPORT") : step === 3 ? (locale === "ko" ? "진영 파일 열기" : "OPEN FACTION FILES") : (locale === "ko" ? "다음 문서" : "NEXT FILE")} <span>▶</span></PixelButton>
+              <div className="onboarding-next"><PixelButton onClick={turnPage} disabled={isTurning}>{step === 0 ? (locale === "ko" ? "문서 열기" : "OPEN REPORT") : step === 3 ? (locale === "ko" ? "진영 파일 열기" : "OPEN FACTION FILES") : (locale === "ko" ? "다음 문서" : "NEXT FILE")} <span>▶</span></PixelButton><button className="skip-briefing" disabled={isTurning} onClick={() => setStep(4)}>{locale === "ko" ? "스토리 건너뛰기" : "Skip story"}</button></div>
             </div>
           </div>
         ) : <><div className="game-title">
@@ -313,13 +317,14 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
               </div>
               <TeamCard team="unicorn" locale={locale} selected={team === "unicorn"} onClick={() => setTeam("unicorn")} />
             </div>
-            <PixelButton onClick={() => setStep(5)} disabled={!team}>{t.continue} <span>▶</span></PixelButton>
+            <div className="onboarding-next faction-next"><PixelButton onClick={() => setStep(5)} disabled={!team}>{t.continue} <span>▶</span></PixelButton><button className="skip-briefing" disabled={!team} onClick={()=>team&&onComplete(team)}>{locale === "ko" ? "설명 건너뛰고 시작" : "Skip briefing & play"}</button></div>
           </div>
         ) : team && (
           <StoryboardTutorial
             locale={locale}
             team={team}
             scene={step - 5}
+            onSkip={() => onComplete(team)}
             onPrevious={() => setStep((current) => Math.max(4, current - 1))}
             onNext={() => step < 5 + storyboardText[locale].length - 1 ? setStep((current) => current + 1) : onComplete(team)}
           />
@@ -347,41 +352,41 @@ const storyboardText = {
   ko: [
     ["01 · 조우", "맨해튼의 밤, 두 종족이 같은 맨홀 신호를 감지합니다."],
     ["02 · 포탈 개방", "봉인된 맨홀을 열면 지하 왕국으로 이어지는 균열이 깨어납니다."],
-    ["03 · 수호자 진화", "스타 샤드를 모아 수호자를 정찰형, 전투형, 각성형으로 진화시키세요."],
+    ["03 · 수호자 진화", "등록 기록으로 수호자가 진화합니다. 3/8연승 또는 30/90초 생존으로 LV.2/3에 도달하세요."],
     ["04 · 라이벌 대결", "드래곤 군단과 유니콘 연맹의 수호자가 포탈의 소유권을 두고 맞섭니다."],
     ["05 · 도시 탐색", "상세 지도에서 점령 현황을 확인하고 다음 작전 구역을 선택하세요."],
-    ["06 · 포탈 결투", "가위바위보에서 먼저 2승을 거두면 포탈 방어막이 해제됩니다."],
-    ["07 · 포탈 러너", "도시 지붕과 지하 배관을 뛰어넘고 스타 샤드를 회수하세요."],
-    ["08 · 서펀트 스네이크", "방향키 / WASD로 샤드 6개를 모으세요. 벽과 자신의 꼬리를 피하세요."],
-    ["09 · 브릭 브레이커", "좌우 키 또는 드래그로 패들을 움직이고 SPACE로 발사하세요. 벽돌 24개를 모두 깨면 승리합니다."],
-    ["10 · 룬 메모리", "카드를 눌러 같은 룬 6쌍을 찾으세요. 120초 안에, 8번째 실수 전에 모든 쌍을 맞히세요."],
-    ["11 · 스카이 인베이더", "좌우로 움직이고 SPACE를 길게 눌러 발사하세요. 적의 탄환을 피하며 적 12기를 모두 격추하세요."],
-    ["12 · 점령과 보상", "게임을 클리어하면 맨홀에 진영의 문양이 새겨지고 샤드와 진화 보상을 받습니다."],
+    ["06 · 포탈 결투", "가장 긴 연승을 기록하세요. 무승부는 연승을 유지하고, 한 번 지면 기록이 종료됩니다."],
+    ["07 · 포탈 러너", "빨라지는 장애물을 뛰어넘으며 최대한 오래 버티세요. 생존 시간이 기록됩니다."],
+    ["08 · 서펀트 스네이크", "방향키 / WASD로 샤드를 계속 모으며 오래 버티세요. 14초 안에 샤드를 먹고 벽과 꼬리를 피하세요."],
+    ["09 · 브릭 브레이커", "좌우 키 또는 드래그로 공을 받으세요. 자동 발사되며 벽돌을 모두 깨면 다음 라운드가 이어집니다."],
+    ["10 · 룬 메모리", "같은 룬을 빠르게 찾으며 생존하세요. 한 쌍마다 약 9초 안에 선택하고, 모두 맞히면 다음 라운드로 이어집니다."],
+    ["11 · 스카이 인베이더", "좌우 이동과 SPACE 발사로 계속 몰려오는 적을 물리치며 오래 버티세요."],
+    ["12 · 점령과 보상", "닉네임으로 기록을 등록하세요. 상위 10위가 표시되며, 1위의 진영이 이 포탈을 점령합니다."],
   ],
   en: [
     ["01 · ENCOUNTER", "Two hidden species detect the same manhole signal beneath Manhattan."],
     ["02 · PORTAL OPEN", "Break the seal and awaken a rift leading into the lost undercity."],
-    ["03 · GUARDIAN EVOLUTION", "Collect star shards to evolve through scout, battle, and awakened forms."],
+    ["03 · GUARDIAN EVOLUTION", "Submit 3/8 consecutive wins or 30/90 survival seconds to unlock guardian levels 2/3."],
     ["04 · RIVAL DUEL", "Dragon Legion and Unicorn Alliance face off for ownership of the portal."],
     ["05 · CITY SEARCH", "Read the tactical map, check control, and choose the next operation zone."],
-    ["06 · PORTAL DUEL", "Win two rounds of rock-paper-scissors to break the portal shield."],
-    ["07 · PORTAL RUNNER", "Leap across rooftops and pipes while recovering star shards."],
-    ["08 · SERPENT SNAKE", "Use arrows / WASD to collect 6 shards. Avoid walls and your tail."],
-    ["09 · BRICK BREAKER", "Move with arrows or drag; SPACE launches the ball. Break all 24 bricks."],
-    ["10 · RUNE MEMORY", "Tap cards to match all 6 pairs in 120 seconds, before your eighth mismatch."],
-    ["11 · SKY INVADERS", "Move left and right, hold SPACE to fire. Dodge shots and defeat all 12 invaders."],
-    ["12 · CLAIM & REWARD", "Clear the game to engrave your faction on the manhole and earn shards and evolution rewards."],
+    ["06 · PORTAL DUEL", "Build the longest win streak. Draws preserve it; one loss ends your run."],
+    ["07 · PORTAL RUNNER", "Jump over obstacles as the pace rises. Your survival time is your record."],
+    ["08 · SERPENT SNAKE", "Use arrows / WASD to survive. Collect a shard within 14 seconds; avoid walls and your tail."],
+    ["09 · BRICK BREAKER", "Move with arrows or drag. The ball auto-launches; clearing bricks starts another wave."],
+    ["10 · RUNE MEMORY", "Match pairs to survive. Inactivity or mismatches cost lives. Complete a board for the next wave."],
+    ["11 · SKY INVADERS", "Move and hold SPACE to fire. Defeat endless waves and survive as long as possible."],
+    ["12 · CLAIM & REWARD", "Submit a nickname and record. The top 10 are ranked; the #1 player’s faction owns the portal."],
   ],
 };
 
 function ArcadeBriefing({ index, locale }: { index: number; locale: Locale }) {
-  const goals = locale === "ko" ? ["샤드 6개 수집", "벽돌 24개 파괴", "같은 룬 6쌍 발견", "적 12기 격추"] : ["COLLECT 6 SHARDS", "BREAK 24 BRICKS", "MATCH 6 PAIRS", "DEFEAT 12 INVADERS"];
+  const goals = locale === "ko" ? ["끝없이 생존", "연속 라운드", "룬 생존 도전", "무한 웨이브"] : ["SURVIVE & GROW", "ENDLESS BRICKS", "RUNE SURVIVAL", "ENDLESS WAVES"];
   const controls = ["↑ ↓ ← → / WASD", "← → / DRAG + SPACE", "CLICK / TAP", "← → + SPACE"];
   return <div className="arcade-briefing"><div className="arcade-briefing-header"><span>ARCADE / 0{index + 3}</span><b>{goals[index]}</b></div>
     {index === 2 ? <div className="brief-memory-board" style={{backgroundImage: `linear-gradient(#08162450, #08162450), url("${landmarkBackgrounds[4]}")`}}>{Array.from({length:12},(_,i)=><div className={i===1||i===6?"preview-rune paired":"preview-rune"} key={i}><span>{i===1||i===6?"✦":"◇"}</span><small>{String(i+1).padStart(2,"0")}</small></div>)}</div> : <GamePreview mode={(["snake","breakout","memory","invader"] as const)[index]} background={landmarkBackgrounds[[0,2,4,5][index]]} label={goals[index]} />}<div className="arcade-briefing-controls"><span>{locale === "ko" ? "조작 방법" : "CONTROLS"}</span><b>{controls[index]}</b></div><p>{locale === "ko" ? "모바일에서는 화면의 조작 버튼을 사용하세요" : "ON MOBILE, USE THE ON-SCREEN CONTROLS"}</p></div>;
 }
 
-function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { locale: Locale; team: Team; scene: number; onPrevious: () => void; onNext: () => void }) {
+function StoryboardTutorial({ locale, team, scene, onPrevious, onNext, onSkip }: { locale: Locale; team: Team; scene: number; onPrevious: () => void; onNext: () => void; onSkip: () => void }) {
   const safeScene = Math.min(storyboardText[locale].length - 1, Math.max(0, scene));
   const [title, body] = storyboardText[locale][safeScene];
   const guardian = team === "dragon" ? <PixelDragon level={3} /> : <PixelUnicorn level={3} />;
@@ -397,10 +402,10 @@ function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { local
         {safeScene === 2 && <div className="evolution-line">{[0, 1, 2].map((level) => <div className={`evolution-form level-${level}`} key={level}><b className="evolution-badge">LV. {level + 1}</b><div className="evolution-platform" aria-hidden="true" />{evolutionGuardian(level)}<div className="evolution-caption"><strong>{(locale === "ko" ? ["정찰형", "전투형", "각성형"] : ["SCOUT", "BATTLE", "AWAKENED"])[level]}</strong><span aria-hidden="true">{[0, 1, 2].map((pip) => <i className={pip <= level ? "on" : ""} key={pip} />)}</span></div></div>)}</div>}
         {safeScene === 3 && <><div className="brief-city" aria-hidden="true" /><div className="brief-versus"><PixelDragon /><b>VS</b><PixelUnicorn flipped /></div></>}
         {safeScene === 4 && <div className="brief-map pixel-map"><div className="map-canvas"><img className="nyc-road-atlas" src={nycTacticalMap} alt="" draggable={false} />{zones.map((item) => <div key={item.id} className="zone-node owner-guide" style={{ left: `${item.x}%`, top: `${item.y}%` }}><ManholePortal /><span className="zone-name owner-guide"><b>{locale === "ko" ? item.ko : item.en}</b></span></div>)}</div></div>}
-        {safeScene === 5 && <><div className="brief-city" aria-hidden="true" /><div className="brief-rps">{(["rock", "paper", "scissors"] as Rps[]).map((move) => <div className="brief-rps-card" key={move}><RpsIcon type={move} /><b>{copy[locale][move]}</b></div>)}</div><div className="brief-guardian">{guardian}</div><span className="brief-rule">{locale === "ko" ? "2승을 먼저 달성하면 포탈 확보" : "FIRST TO 2 WINS · CAPTURE THE PORTAL"}</span></>}
+        {safeScene === 5 && <><div className="brief-city" aria-hidden="true" /><div className="brief-rps">{(["rock", "paper", "scissors"] as Rps[]).map((move) => <div className="brief-rps-card" key={move}><RpsIcon type={move} /><b>{copy[locale][move]}</b></div>)}</div><div className="brief-guardian">{guardian}</div><span className="brief-rule">{locale === "ko" ? "최장 연승 1위가 포탈 점령" : "LONGEST STREAK · #1 CLAIMS THE PORTAL"}</span></>}
         {safeScene === 6 && <div className="brief-run"><div className="run-guardian">{guardian}</div><span className="brief-coin">✦</span><i className="brief-pipe" /><ManholePortal active /></div>}
         {safeScene >= 7 && safeScene <= 10 && <ArcadeBriefing index={safeScene - 7} locale={locale} />}
-        {safeScene === 11 && <div className={`reward-scene reward-${team}`}><div className="brief-city" aria-hidden="true" /><div className="reward-heading"><span>MISSION COMPLETE</span><h3>{locale === "ko" ? "새로운 구역을 확보했습니다" : "DISTRICT SECURED"}</h3><p>{locale === "ko" ? "당신의 진영이 뉴욕에 한 걸음 더 가까워졌습니다" : "One more district. One step closer to New York."}</p></div><div className="reward-display"><div className="reward-pedestal">{guardian}</div><div className="reward-loot"><ManholePortal owner={team} /><PixelChest /></div></div><div className="reward-summary"><div><small>STAR SHARDS</small><strong>+240 <span>✦</span></strong></div><div><small>{locale === "ko" ? "수호자 진화" : "GUARDIAN EVOLUTION"}</small><strong>LV +1 <span>↑</span></strong></div></div><span className="reward-note">{locale === "ko" ? "게임 클리어 → 포탈 점령 → 보상 획득 · 최대 LV.3" : "CLEAR → CLAIM → COLLECT · MAX LV.3"}</span></div>}
+        {safeScene === 11 && <div className={`reward-scene reward-${team}`}><div className="brief-city" aria-hidden="true" /><div className="reward-heading"><span>MISSION COMPLETE</span><h3>{locale === "ko" ? "새로운 구역을 확보했습니다" : "DISTRICT SECURED"}</h3><p>{locale === "ko" ? "당신의 진영이 뉴욕에 한 걸음 더 가까워졌습니다" : "One more district. One step closer to New York."}</p></div><div className="reward-display"><div className="reward-pedestal">{guardian}</div><div className="reward-loot"><ManholePortal owner={team} /><PixelChest /></div></div><div className="reward-summary"><div><small>LEADERBOARD</small><strong>TOP 10</strong></div><div><small>PORTAL OWNER</small><strong>RANK #1</strong></div></div><span className="reward-note">{locale === "ko" ? "기록 등록 → 순위 결정 → 1위 진영 점령" : "SUBMIT → RANK → #1 CONTROLS THE PORTAL"}</span></div>}
       </div>
       <div className="storyboard-copy">
         <span className="pixel-label">FIELD BRIEFING // {String(safeScene + 1).padStart(2, "0")}</span>
@@ -409,7 +414,7 @@ function StoryboardTutorial({ locale, team, scene, onPrevious, onNext }: { local
         <div className="storyboard-progress">{Array.from({ length: storyboardText[locale].length }).map((_, index) => <i key={index} className={index <= safeScene ? "on" : ""} />)}</div>
         <div className="storyboard-actions">
           <PixelButton secondary onClick={onPrevious}>◀ {locale === "ko" ? "이전" : "BACK"}</PixelButton>
-          <PixelButton onClick={onNext}>{safeScene === storyboardText[locale].length - 1 ? (locale === "ko" ? "작전 시작" : "START MISSION") : (locale === "ko" ? "다음 장면" : "NEXT SCENE")} ▶</PixelButton>
+          <div className="onboarding-next"><PixelButton onClick={onNext}>{safeScene === storyboardText[locale].length - 1 ? (locale === "ko" ? "작전 시작" : "START MISSION") : (locale === "ko" ? "다음 장면" : "NEXT SCENE")} ▶</PixelButton><button className="skip-briefing" onClick={onSkip}>{locale === "ko" ? "설명 건너뛰기" : "Skip briefing"}</button></div>
         </div>
       </div>
     </section>
@@ -435,20 +440,24 @@ function mapPanBounds(viewport: HTMLDivElement, zoom: number) {
 
 export default function App() {
   const [locale, setLocale] = useState<Locale>("en");
+  const [booting,setBooting]=useState(true);
+  const [boards,setBoards]=useState<Boards>({});
+  const [rankError,setRankError]=useState(false);
+  const [pendingRecord,setPendingRecord]=useState<number|null>(null);
   const [team, setTeam] = useState<Team | null>(null);
   const [savedProgress] = useState(readProgress);
-  const [levels, setLevels] = useState<Record<Team, EvolutionLevel>>(savedProgress?.levels ?? { dragon: 1, unicorn: 1 });
+  const [levels,setLevels] = useState<Record<Team, EvolutionLevel>>(savedProgress?.levels ?? { dragon: 1, unicorn: 1 });
   const guardianLevel = levels[team ?? "dragon"];
   const [zoneId, setZoneId] = useState(1);
-  const [shards, setShards] = useState(savedProgress?.shards ?? 0);
+  const [shards] = useState(savedProgress?.shards ?? 0);
   const roundBusy = useRef(false);
   const roundTimer = useRef<number | undefined>(undefined);
   const [roundPending, setRoundPending] = useState(false);
   useEffect(() => () => window.clearTimeout(roundTimer.current), []);
   const [inBattle, setInBattle] = useState(false);
   const [gameMode, setGameMode] = useState<GameMode>("rps");
-  const [owners, setOwners] = useState<(Team | null)[]>(savedProgress?.owners ?? zones.map((zone) => zone.owner));
-  const [scores, setScores] = useState(savedProgress?.scores ?? { dragon: 48, unicorn: 52 });
+  const owners = zones.map(zone=>boards[zone.id]?.[0]?.team??null);
+  const scores = {dragon:Math.round(owners.filter(x=>x==="dragon").length/8*100),unicorn:Math.round(owners.filter(x=>x==="unicorn").length/8*100)};
   const [playerWins, setPlayerWins] = useState(0);
   const [enemyWins, setEnemyWins] = useState(0);
   const [playerMove, setPlayerMove] = useState<Rps | null>(null);
@@ -484,25 +493,19 @@ export default function App() {
     return () => observer.disconnect();
   }, [team, inBattle]);
 
-  useEffect(() => {
-    try { localStorage.setItem(PROGRESS_KEY, JSON.stringify({ shards, levels, owners, scores })); } catch { /* Play remains available when storage is unavailable. */ }
-  }, [shards, levels, owners, scores]);
-
+  useEffect(()=>{
+    let active=true;let loading=false;
+    const refresh=async()=>{if(loading)return;loading=true;try{const next=await fetchBoards();if(active){setBoards(next);setRankError(false);}}catch{if(active)setRankError(true);}finally{loading=false;}};
+    void refresh();const timer=window.setInterval(refresh,30000);window.addEventListener("focus",refresh);
+    return()=>{active=false;window.clearInterval(timer);window.removeEventListener("focus",refresh);};
+  },[]);
+  useEffect(()=>{try{localStorage.setItem(PROGRESS_KEY,JSON.stringify({shards,levels,owners:savedProgress?.owners??zones.map(()=>null),scores:savedProgress?.scores??{dragon:50,unicorn:50}}));}catch{}},[shards,levels]);
+  if(booting)return <BootScreen onComplete={()=>setBooting(false)} />;
   if (!team) return <Onboarding locale={locale} setLocale={setLocale} onComplete={(selectedTeam) => { setTeam(selectedTeam); }} />;
-
-  const claimPortal = (winner: Team) => {
-    setOwners((current) => current.map((owner, index) => index === zoneId ? winner : owner));
-    setScores((current) => winner === "dragon"
-      ? { dragon: Math.min(99, current.dragon + 1), unicorn: Math.max(1, current.unicorn - 1) }
-      : { dragon: Math.max(1, current.dragon - 1), unicorn: Math.min(99, current.unicorn + 1) });
-    if (winner === team) {
-      setShards((current) => current + 240);
-      setLevels((current) => ({ ...current, [team]: Math.min(3, current[team] + 1) as EvolutionLevel }));
-    }
-  };
+  const saveRecord=async(name:string)=>{if(pendingRecord===null)return;const next=await submitRecord(zoneId,name,team,pendingRecord);setBoards(next);setRankError(false);const achieved = (gameMode==="rps" ? (pendingRecord>=8?3:pendingRecord>=3?2:1) : (pendingRecord>=90000?3:pendingRecord>=30000?2:1)) as EvolutionLevel;setLevels(old=>({...old,[team]:Math.max(old[team],achieved) as EvolutionLevel}));setPendingRecord(null);setInBattle(false);};
 
   const play = (move: Rps) => {
-    if (playerWins >= 2 || enemyWins >= 2 || roundBusy.current) return;
+    if (enemyWins > 0 || pendingRecord !== null || roundBusy.current) return;
     roundBusy.current = true; setRoundPending(true);
     roundTimer.current = window.setTimeout(() => { roundBusy.current = false; setRoundPending(false); }, 650);
     const moves: Rps[] = ["rock", "paper", "scissors"];
@@ -515,14 +518,10 @@ export default function App() {
     if (didWin) {
       const nextWins = playerWins + 1;
       setPlayerWins(nextWins);
-      if (nextWins === 2) claimPortal(team);
+
     } else if (didLose) {
-      const nextWins = enemyWins + 1;
-      setEnemyWins(nextWins);
-      if (nextWins === 2) {
-        const rivalTeam: Team = team === "dragon" ? "unicorn" : "dragon";
-        claimPortal(rivalTeam);
-      }
+      setEnemyWins(1);
+      if(playerWins>0)setPendingRecord(playerWins);
     }
   };
 
@@ -581,7 +580,7 @@ export default function App() {
         </button>
         <div className="war-score">
           <div className="dragon-score"><span>DRAGON</span><b>{scores.dragon}</b></div>
-          <div className="score-track"><i style={{ width: `${scores.dragon}%` }} /><b>{scores.dragon > scores.unicorn ? "DRAGON" : "UNICORN"} · {t.leading}</b></div>
+          <div className="score-track ranked-control-track"><i style={{ width: `${scores.dragon}%` }} /><span style={{ width: `${scores.unicorn}%` }} /><b>{scores.dragon === scores.unicorn ? (locale === "ko" ? "동률 · 미점령 구역을 공략하세요" : "TIED · CHALLENGE A PORTAL") : `${scores.dragon > scores.unicorn ? "DRAGON" : "UNICORN"} · ${t.leading}`}</b></div>
           <div className="unicorn-score"><b>{scores.unicorn}</b><span>UNICORN</span></div>
         </div>
         <div className="header-tools">
@@ -652,16 +651,16 @@ export default function App() {
               background={landmarkBackgrounds[zone.id]}
               locale={locale}
               guardian={team === "dragon" ? dragonArt[guardianLevel] : unicornArt[guardianLevel]}
-              onCapture={() => { claimPortal(team); setInBattle(false); }}
+              onFinish={(milliseconds) => setPendingRecord(milliseconds)}
               onExit={() => setInBattle(false)}
             />
           ) : (
             <div className="battle-arena landmark-battle" style={{ backgroundImage: `linear-gradient(#08132140, #08132155), url("${landmarkBackgrounds[zone.id]}")` }}>
               <div className="battle-sky"><div className="pixel-moon" /><div className="skyline-far" /></div>
               <div className="battle-hud">
-                <div className="dragon-hud"><span>{t.dragonTeam}</span><b>{dragonWins} WIN</b><div className="round-pips dragon-pips"><i className={dragonWins > 0 ? "on" : ""} /><i className={dragonWins > 1 ? "on" : ""} /></div></div>
+                <div className="dragon-hud"><span>{t.dragonTeam}</span><b>{team === "dragon" ? `${dragonWins} STREAK` : "RIVAL"}</b></div>
                 <strong><small>RPS</small>VS</strong>
-                <div className="unicorn-hud"><span>{t.unicornTeam}</span><b>{unicornWins} WIN</b><div className="round-pips unicorn-pips"><i className={unicornWins > 0 ? "on" : ""} /><i className={unicornWins > 1 ? "on" : ""} /></div></div>
+                <div className="unicorn-hud"><span>{t.unicornTeam}</span><b>{team === "unicorn" ? `${unicornWins} STREAK` : "RIVAL"}</b></div>
               </div>
               <div className="rps-reveal">
                 <div className="dragon-move">{dragonMove ? <RpsIcon type={dragonMove} /> : <b>?</b>}</div>
@@ -673,8 +672,7 @@ export default function App() {
                 <div className={team === "unicorn" ? "player fighter" : "enemy fighter"}><PixelUnicorn flipped level={team === "unicorn" ? guardianLevel : 3} /></div>
               </div>
               <div className="battle-ground"><div className="duel-portal"><ManholePortal active /><div className="duel-portal-caption"><span>NYC / TIMES SQUARE</span><b>{locale === "ko" ? "포탈 쟁탈전" : "PORTAL CONTEST"}</b><i aria-hidden="true" /></div></div></div>
-              {playerWins === 2 && <div className="victory-banner"><div className="victory-loot"><ManholePortal owner={team} /><PixelChest /></div><span>PORTAL SECURED</span><h2>{t.victory}</h2><p>{t.defeated} · +240 {t.shards}</p><PixelButton onClick={restart}>{t.reset}</PixelButton></div>}
-              {enemyWins === 2 && <div className="victory-banner defeated-banner"><span>×</span><h2>{locale === "ko" ? "패배" : "DEFEAT"}</h2><p>{locale === "ko" ? "상대 진영이 포탈을 점령했습니다." : "The rival faction captured this portal."}</p><PixelButton onClick={restart}>{t.reset}</PixelButton></div>}
+              {enemyWins > 0 && <div className="victory-banner"><span>STREAK COMPLETE</span><h2>{playerWins} {locale === "ko" ? "연승" : "WIN STREAK"}</h2><p>{locale === "ko" ? "무승부는 연승 유지 · 패배하면 기록 종료":"DRAWS KEEP YOUR STREAK · A LOSS ENDS YOUR RUN"}</p>{playerWins>0&&<PixelButton onClick={()=>setPendingRecord(playerWins)}>{locale === "ko" ? "기록 등록" : "REGISTER RECORD"}</PixelButton>}<PixelButton secondary onClick={restart}>{t.reset}</PixelButton></div>}
             </div>
           )}
         </section>
@@ -693,7 +691,7 @@ export default function App() {
             <>
               <span className="pixel-label">ARCADE // {zone.en.toUpperCase()}</span>
               <h2>{locale === "ko" ? "포탈 러너" : "Portal Runner"}</h2>
-              <p className="rps-help">{locale === "ko" ? "점프로 장애물을 넘고 스타 샤드를 모아 포탈까지 도달하세요." : "Jump over obstacles, collect shards, and reach the portal."}</p>
+              <p className="rps-help">{locale === "ko" ? "점프로 장애물을 넘으며 최대한 오래 버티세요." : "Jump over obstacles and survive as long as possible."}</p>
               <div className="runner-keys"><b>SPACE</b><span>{locale === "ko" ? "점프" : "JUMP"}</span><b>↑</b></div>
               <PixelButton secondary onClick={() => setInBattle(false)}>◀ {locale === "ko" ? "지도로" : "Back to map"}</PixelButton>
             </>
@@ -701,17 +699,19 @@ export default function App() {
             <>
               <span className="pixel-label">ARCADE // {gameInfo[gameMode].code}</span>
               <h2>{locale === "ko" ? gameInfo[gameMode].ko : gameInfo[gameMode].en}</h2>
-              <p className="rps-help">{locale === "ko" ? "레트로 게임을 클리어하고 이 구역의 포탈을 점령하세요." : "Clear the retro game to capture this district portal."}</p>
+              <p className="rps-help">{locale === "ko" ? "최대한 오래 버티세요. 1위 기록의 진영이 포탈을 점령합니다." : "Survive as long as possible. The #1 record controls this portal."}</p>
               <PixelButton secondary onClick={() => setInBattle(false)}>◀ {locale === "ko" ? "지도로" : "Back to map"}</PixelButton>
             </>
           ) : (
             <>
               <span className="pixel-label">{t.versus} // {zone.en.toUpperCase()}</span>
               <h2>{t.rpsTitle}</h2>
-              <p className="rps-help">{t.rpsBody}</p>
+              <p className="rps-help">{locale === "ko" ? "연승을 쌓으세요. 무승부는 유지, 패배하면 종료됩니다. 가장 높은 연승 기록이 포탈을 점령합니다." : "Build your win streak. Draws keep it; a loss ends it. The longest streak controls the portal."}</p>
+              <div className="streak-counter"><small>WIN STREAK</small><b>{playerWins}</b></div>
+              {playerWins>0&&enemyWins===0&&<PixelButton secondary disabled={roundPending} onClick={()=>{setEnemyWins(1);setPendingRecord(playerWins);}}>{locale === "ko" ? "도전 종료 · 기록 등록" : "END RUN · REGISTER"}</PixelButton>}
               <div className="ability-list">
                 {(["rock", "paper", "scissors"] as Rps[]).map((move, index) => (
-                  <button key={move} onClick={() => play(move)} disabled={roundPending || playerWins === 2 || enemyWins === 2} className={playerMove === move ? "chosen" : ""}>
+                  <button key={move} onClick={() => play(move)} disabled={roundPending || enemyWins > 0 || pendingRecord !== null} className={playerMove === move ? "chosen" : ""}>
                     <b>0{index + 1}</b><RpsIcon type={move} /><span>{t[move]}<small>{move.toUpperCase()}</small></span>
                   </button>
                 ))}
@@ -719,8 +719,10 @@ export default function App() {
               <PixelButton secondary onClick={() => setInBattle(false)}>◀ {locale === "ko" ? "지도로" : "Back to map"}</PixelButton>
             </>
           )}
+          <Leaderboard entries={boards[zoneId]??[]} rps={zone.game==="rps"} ko={locale==="ko"} error={rankError}/ >
         </aside>
       </section>
+      {pendingRecord!==null&&<RecordEntry value={pendingRecord} rps={gameMode==="rps"} ko={locale==="ko"} onSave={saveRecord} onClose={()=>{setPendingRecord(null);setInBattle(false);}}/>}
     </main>
   );
 }

@@ -1491,3 +1491,37 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .team-card.selected .team-check { background: #28251b; border: 2px solid #f2cd70; box-shadow: inset 0 0 0 2px #66512b, 3px 3px 0 #040b13; }
 .team-card.selected .team-check svg { fill: #ffda75; opacity: 1; }
 .team-card.dragon.selected,.team-card.unicorn.selected { border-color: #f2cd70; box-shadow: 0 0 0 3px var(--night), 0 0 0 5px #d6ad52, 8px 8px 0 #050b14; }
+
+.boot-screen { position: fixed; inset: 0; z-index: 1000; background: #000; display: grid; place-items: center; color: #e8dbb9; }.boot-logo { text-align:center; padding: 24px; animation: boot-reveal 2.4s ease both; }.boot-logo > span,.boot-logo p { font: 8px/2 var(--arcade); letter-spacing:.15em; color:#b4a68b; }.boot-logo h1 { display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap; font: clamp(23px,5vw,58px)/1.5 var(--arcade); }.boot-logo b { color:#df7c6c; }.boot-logo strong { color:#8bd6d4; }.boot-logo i { color:#efd18a; font-size:17px; font-style:normal; }.boot-screen > button { position:absolute; bottom:32px; right:32px; background:transparent; color:#b6b1a2; border:1px solid #37372f; padding:12px; cursor:pointer; }
+@keyframes boot-reveal { 0%,100% { opacity:0; } 25%,70% { opacity:1; } }
+.leaderboard { margin-top:24px; border:1px solid #4e5962; background:#0b1723; text-align:left; }.leaderboard header { padding:14px 12px; border-bottom:1px solid #455461; display:flex; justify-content:space-between; gap:8px; align-items:center; }.leaderboard header b { color:#efd28c; font:10px var(--arcade); }.leaderboard header span { color:#93adae; font-size:9px; }.leaderboard > p { font-size:10px; color:#a8b6bb; line-height:1.6; margin:12px; }.leaderboard ol { margin:0; padding:0; list-style:none; }.leaderboard li { display:grid; grid-template-columns:24px minmax(0,1fr) auto; gap:8px; align-items:center; padding:10px 12px; border-top:1px solid #253744; font-size:11px; }.leaderboard li:first-child { background:#463b2444; color:#f1d58c; }.leaderboard li>span { color:#859b9f; }.leaderboard li div { min-width:0; }.leaderboard li b { display:block; overflow-wrap:anywhere; }.leaderboard li small { display:block; font-size:8px; color:#90a6af; margin-top:4px; }.leaderboard li strong { font-variant-numeric:tabular-nums; font-size:12px; }
+.record-scrim { position:fixed; inset:0; z-index:300; display:grid; place-items:center; padding:20px; background:#02070cdb; }.record-dialog { width:min(440px,100%); max-height:90svh; overflow:auto; padding:28px; background:#102335; border:2px solid #b99b64; box-shadow:8px 8px 0 #000; color:#efe7d0; }.record-dialog > span { color:#e5c781; font:8px var(--arcade); }.record-dialog h2 { font:30px var(--arcade); color:#f2d68f; }.record-dialog p { font-size:14px; line-height:1.7; }.record-dialog small { color:#9cb1b7; line-height:1.6; }.record-dialog label { display:grid; gap:8px; font-size:11px; margin:24px 0 16px; }.record-dialog input { width:100%; background:#071522; border:2px solid #74858c; padding:12px; color:#fff1cc; font-size:18px; }.record-dialog form > button { width:100%; margin-top:12px; }.record-dialog [role=alert] { color:#ffb2a1; }.action-rail { overflow-y:auto; }
+@media(prefers-reduced-motion:reduce){.boot-logo { animation:none; }}
+.ranked-control-track { background:#37414b; }.ranked-control-track > span { position:absolute; top:0; right:0; height:100%; background:#7bc9c8; }.ranked-control-track > b { z-index:1; }.streak-counter { margin:16px 0; display:flex; justify-content:space-between; align-items:center; padding:16px; background:#081522; border:1px solid #7c6944; }.streak-counter small { color:#a2b7b8; font:8px var(--arcade); }.streak-counter b { font:26px var(--arcade); color:#f1d28a; }
+
+/* Quiet secondary actions stay directly underneath forward navigation. */
+.onboarding-next { display: flex; flex-direction: column; align-items: stretch; gap: 7px; min-width: 0; }
+.storyboard-actions, .archive-reader .story-controls { align-items: start; }
+.onboarding .skip-briefing { border: 0; background: transparent; box-shadow: none; color: #9ba8b3; padding: 7px 12px; min-height: 32px; font: 12px/1.5 var(--pixel); text-transform: none; letter-spacing: .025em; cursor: pointer; opacity: .72; }
+.onboarding .skip-briefing:hover { opacity: 1; color: #f1d88c; }
+.onboarding .skip-briefing:focus-visible { outline: 2px solid #edcc71; outline-offset: 2px; opacity: 1; }
+.onboarding .skip-briefing:disabled { opacity: .3; cursor: default; }
+.faction-next { width: min(360px,100%); margin: 24px auto 0; }
+.faction-next .pixel-button { margin: 0; width: 100%; }
+/* Archive playback: legible text, a slow film scan, and physical paper movement. */
+.archive-type { position: relative; }
+.type-unrevealed { visibility: hidden; }
+.archive-accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.type-reveal { position: absolute; right: 0; bottom: -18px; border: 0; padding: 2px 5px; background: #d9d2b9; color: #686347; font: 11px/1 var(--pixel); cursor: pointer; }
+.type-reveal:focus-visible { outline: 2px solid #705226; }
+.archive-reader .current-sheet .evidence { animation: archive-develop 1.1s steps(12,end) both; }
+.archive-reader .evidence::before { content: ''; position: absolute; inset: 0; z-index: 7; pointer-events: none; background: repeating-linear-gradient(0deg,transparent 0 3px,#09151024 3px 4px); opacity: .4; }
+.archive-reader .current-sheet .file-footer strong { animation: archive-stamp 600ms 450ms cubic-bezier(.2,.7,.2,1) both; }
+.archive-reader .file-stack::after { content: ''; position: absolute; inset: 0; z-index: 9; pointer-events: none; background: linear-gradient(transparent 46%,#fff7cc0a 49%,#fff7cc18 50%,transparent 54%); background-size: 100% 220%; animation: archive-scan 7s linear infinite; mix-blend-mode: soft-light; }
+@keyframes archive-develop { from { opacity: .15; filter: sepia(.8) brightness(.6); clip-path: inset(0 0 100% 0); } 35% { opacity: .75; } to { opacity: 1; filter: none; clip-path: inset(0); } }
+@keyframes archive-stamp { from { opacity: 0; transform: translateY(-9px) rotate(-8deg) scale(1.18); } to { opacity: 1; transform: rotate(-3deg) scale(1); } }
+@keyframes archive-scan { from { background-position: 0 130%; } to { background-position: 0 -130%; } }
+@media (prefers-reduced-motion: reduce) {
+  .archive-reader .current-sheet .evidence, .archive-reader .current-sheet .file-footer strong, .archive-reader .file-stack::after { animation: none; }
+  .archive-reader .file-stack::after { display: none; }
+}

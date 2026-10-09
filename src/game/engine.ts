@@ -2,6 +2,7 @@ export type Mode = "snake" | "breakout" | "memory" | "invader" | "runner";
 export type Point = { x: number; y: number };
 export type Input = { left: boolean; right: boolean; fire: boolean; jump: boolean; pointer?: number; fireTap?: boolean };
 export type Game = {
+  survival: boolean; wave: number; pressure: number;
   mode: Mode; status: "running" | "won" | "lost"; score: number; target: number; lives: number;
   time: number; elapsed: number; tick: number; cooldown: number; immune: number;
   snake: Point[]; direction: Point; queued: Point; food: Point;
@@ -16,14 +17,14 @@ export const WIDTH = 480, HEIGHT = 360;
 export const blankInput = (): Input => ({ left: false, right: false, fire: false, jump: false });
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
 
-export function createGame(mode: Mode, random = Math.random): Game {
+export function createGame(mode: Mode, random = Math.random, survival = false): Game {
   const deck = [0,1,2,3,4,5,0,1,2,3,4,5];
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
   }
   return {
-    mode, status: "running", score: 0, target: mode === "breakout" ? 24 : mode === "invader" ? 12 : mode === "runner" ? 100 : 6,
+    survival, wave: 1, pressure: 0, mode, status: "running", score: 0, target: mode === "breakout" ? 24 : mode === "invader" ? 12 : mode === "runner" ? 100 : 6,
     lives: mode === "snake" ? 1 : mode === "memory" ? 8 : 3,
     time: mode === "memory" ? 120 : 150, elapsed: 0, tick: 0, cooldown: 0, immune: 0,
     snake: [{x:6,y:7},{x:5,y:7},{x:4,y:7}], direction:{x:1,y:0}, queued:{x:1,y:0}, food:{x:10,y:7},
@@ -62,10 +63,12 @@ function damage(game: Game) {
 export function stepGame(g: Game, input: Input, seconds: number, random = Math.random) {
   if (g.status !== "running") return;
   const dt = clamp(seconds,0,.04);
-  g.elapsed += dt; g.time = Math.max(0,g.time-dt);
+  g.elapsed += dt; g.time = g.survival ? g.elapsed : Math.max(0,g.time-dt);
+  if(g.survival)g.pressure+=dt;
   g.cooldown = Math.max(0,g.cooldown-dt); g.immune = Math.max(0,g.immune-dt);
-  if (g.time <= 0) { g.status="lost"; return; }
+  if (!g.survival && g.time <= 0) { g.status="lost"; return; }
   if (g.mode === "snake") {
+    if(g.survival && g.pressure > 14){g.lives=0;g.status="lost";return;}
     g.tick += dt;
     if (g.tick < Math.max(.105,.19-g.score*.012)) return;
     g.tick=0; g.direction={...g.queued};
@@ -75,14 +78,14 @@ export function stepGame(g: Game, input: Input, seconds: number, random = Math.r
     if(head.x<0||head.x>=20||head.y<0||head.y>=14||body.some(p=>p.x===head.x&&p.y===head.y)){g.lives=0;g.status="lost";return;}
     g.snake.unshift(head);
     if(eating){
-      g.score++;
+      g.score++;g.pressure=0;
       const free:Point[]=[];
       for(let y=0;y<14;y++)for(let x=0;x<20;x++)if(!g.snake.some(p=>p.x===x&&p.y===y))free.push({x,y});
       g.food=free[Math.floor(random()*free.length)]??{x:0,y:0};
     }else g.snake.pop();
   } else if(g.mode === "breakout") {
     g.paddle=clamp(input.pointer??g.paddle+(Number(input.right)-Number(input.left))*300*dt,40,440);
-    if(g.ball.docked){g.ball.x=g.paddle;g.ball.y=306;if(input.fire||input.fireTap){g.ball.docked=false;input.fireTap=false;}else return;}
+    if(g.ball.docked){g.ball.x=g.paddle;g.ball.y=306;if(input.fire||input.fireTap||(g.survival&&g.pressure>1)){g.ball.docked=false;g.pressure=0;input.fireTap=false;}else return;}
     const b=g.ball,oldX=b.x,oldY=b.y;
     b.x+=b.vx*dt;b.y+=b.vy*dt;
     if(b.x<7||b.x>473){b.x=clamp(b.x,7,473);b.vx*=-1;}
@@ -98,12 +101,12 @@ export function stepGame(g: Game, input: Input, seconds: number, random = Math.r
       else {b.vx*=-1;b.x=oldX;}
       break;
     }
-    if(b.y>366){g.lives--;if(g.lives<=0)g.status="lost";else g.ball={x:g.paddle,y:306,vx:110,vy:-170,docked:true};}
+    if(b.y>366){g.lives--;if(g.lives<=0)g.status="lost";else {g.ball={x:g.paddle,y:306,vx:110,vy:-170,docked:true};g.pressure=0;}}
   } else if(g.mode === "invader") {
     g.ship=clamp(input.pointer??g.ship+(Number(input.right)-Number(input.left))*260*dt,18,462);
     if((input.fire||input.fireTap)&&g.cooldown===0){g.bullets.push({x:g.ship,y:300,enemy:false});g.cooldown=.22;input.fireTap=false;}
     const alive=g.enemies.filter(e=>e.alive);
-    const speed=24+(12-alive.length)*3;
+    const speed=24+(12-alive.length)*3+(g.survival?Math.min(65,g.elapsed*.5):0);
     if(alive.some(e=>e.x+g.enemyDirection*speed*dt<20||e.x+g.enemyDirection*speed*dt>436)){
       g.enemyDirection*=-1;alive.forEach(e=>e.y+=15);
     }
@@ -122,16 +125,28 @@ export function stepGame(g: Game, input: Input, seconds: number, random = Math.r
   } else if(g.mode === "runner") {
     if(input.jump&&g.height===0){g.velocity=460;}
     input.jump=false;g.velocity-=1000*dt;g.height=Math.max(0,g.height+g.velocity*dt);if(g.height===0)g.velocity=0;
-    g.distance+=140*dt;g.score=Math.min(100,Math.floor(g.distance/30));
+    g.distance+=(140+(g.survival?Math.min(130,g.elapsed*.65):0))*dt;g.score=g.survival?Math.floor(g.distance):Math.min(100,Math.floor(g.distance/30));
+    if(g.survival){g.obstacles=g.obstacles.filter(x=>x>g.distance-80);while((g.obstacles.at(-1)??0)<g.distance+900)g.obstacles.push((g.obstacles.at(-1)??g.distance)+290+random()*150);g.coins=g.coins.filter(x=>x>g.distance-80);}
     for(const obstacle of g.obstacles){const x=obstacle-g.distance+80;if(x<101&&x+24>61&&g.height<33)damage(g);}
     g.coins=g.coins.filter(coin=>{const x=coin-g.distance+80;return !(Math.abs(x-80)<24&&Math.abs(g.height-45)<38);});
-  } else if(g.mode === "memory"&&g.reveal>0) {
+  } else if(g.mode === "memory") {
+    if(g.survival&&g.pressure>Math.max(3,9-g.wave*.4)){g.lives--;g.pressure=0;g.open=[];g.reveal=0;if(g.lives<=0)g.status="lost";}
+    if(g.reveal>0){
     g.reveal=Math.max(0,g.reveal-dt);
     if(g.reveal===0){
       if(g.deck[g.open[0]]===g.deck[g.open[1]]){g.matched.push(...g.open);g.score++;}
       else {g.lives--;if(g.lives<=0)g.status="lost";}
-      g.open=[];
+      g.open=[];g.pressure=0;
+    }
     }
   }
-  if(g.status==="running"&&g.score>=g.target)g.status="won";
+  if(g.survival&&g.status==="running"){
+    if((g.mode==="breakout"&&g.bricks.every(b=>!b.alive))||(g.mode==="invader"&&g.enemies.every(e=>!e.alive))||(g.mode==="memory"&&g.matched.length===12)){
+      const next=createGame(g.mode,random,true);g.wave++;g.pressure=0;
+      if(g.mode==="breakout"){g.bricks=next.bricks;g.ball={...next.ball,vx:110+Math.min(80,g.wave*8),vy:-170-Math.min(100,g.wave*10)};}
+      if(g.mode==="invader"){g.enemies=next.enemies;g.bullets=[];g.enemyClock=0;}
+      if(g.mode==="memory"){g.deck=next.deck;g.open=[];g.matched=[];g.reveal=0;}
+    }
+    if(g.mode==="snake"&&g.snake.length>=280){const next=createGame("snake",random,true);g.snake=next.snake;g.food=next.food;g.direction=next.direction;g.queued=next.queued;g.wave++;}
+  } else if(g.status==="running"&&g.score>=g.target)g.status="won";
 }
