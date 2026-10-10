@@ -1525,3 +1525,25 @@ p, h1, h2, strong, small { text-wrap: pretty; }
   .archive-reader .current-sheet .evidence, .archive-reader .current-sheet .file-footer strong, .archive-reader .file-stack::after { animation: none; }
   .archive-reader .file-stack::after { display: none; }
 }
+
+/* Keep the desktop playfield in place while the inspector scrolls independently. */
+@media (min-width: 761px) {
+  .game { height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .game > .game-header { flex: 0 0 76px; }
+  .game > .game-layout { flex: 1 1 0; min-height: 0; grid-template-rows: minmax(0, 1fr); overflow: hidden; }
+  .game-layout > * { min-height: 0; min-width: 0; }
+  .game-layout > .action-rail { height: 100%; overflow-y: auto; overscroll-behavior-y: contain; scrollbar-gutter: stable; scrollbar-width: thin; scrollbar-color: #61717d #0b1726; }
+  .game-layout > .mission-rail { overflow-y: auto; overscroll-behavior-y: contain; scrollbar-width: thin; }
+  .game-layout > .map-panel { display: flex; flex-direction: column; height: 100%; }
+  .game .map-top { flex: 0 0 82px; }
+  .game .map-panel > .pixel-map { flex: 1 1 0; height: auto; min-height: 0; }
+  .game .battle-arena { flex: 1 1 0; height: 100%; min-height: 0; }
+  .game .arcade-cabinet { min-height: 0; height: 100%; overflow-y: auto; overscroll-behavior-y: contain; }
+}
+@media (max-width: 760px) {
+  .game .action-rail { max-height: 45dvh; overflow-y: auto; overscroll-behavior-y: contain; }
+}
+
+img.loot-sprite { object-fit: contain; }
+
+.brief-memory-board { grid-template-columns:repeat(5,minmax(0,1fr)); }.preview-rune img { width:100%;height:100%;object-fit:contain;image-rendering:pixelated; }

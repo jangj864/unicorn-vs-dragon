@@ -36,7 +36,7 @@ test('runner collision and correctly timed jumping have different outcomes', () 
   const lost=createGame('runner');advance(lost,25);assert.equal(lost.status,'lost');
   const win=createGame('runner');
   for(let t=0;t<25&&win.status==='running';t+=.02){
-    const input=blankInput();input.jump=win.obstacles.some(p=>p-win.distance>22&&p-win.distance<60)&&win.height===0;
+    const input=blankInput();input.jump=win.obstacles.some(p=>p-win.distance>22&&p-win.distance<45)&&win.height===0;
     stepGame(win,input,.02);
   }
   assert.equal(win.status,'won');assert.equal(win.score,100);assert.ok(win.lives>0);
@@ -90,11 +90,15 @@ test('survival runner replenishes hazards beyond the old finish line',()=>{
   const g=createGame('runner',Math.random,true);g.distance=3300;g.obstacles=[];stepGame(g,blankInput(),.02);
   assert.equal(g.status,'running');assert.ok(g.obstacles.length>0);assert.ok(g.obstacles.at(-1)>g.distance+900);
 });
-test('memory inactivity costs lives and a solved survival board starts a new wave',()=>{
-  const g=createGame('memory',Math.random,true);g.pressure=10;stepGame(g,blankInput(),.02);assert.equal(g.lives,7);
-  g.matched=Array.from({length:12},(_,i)=>i);stepGame(g,blankInput(),.02);assert.equal(g.wave,2);assert.equal(g.matched.length,0);assert.equal(g.status,'running');
-  g.lives=1;g.pressure=10;stepGame(g,blankInput(),.02);assert.equal(g.status,'lost');
-  const elapsed=g.elapsed;stepGame(g,blankInput(),.02);assert.equal(g.elapsed,elapsed);
+test('memory time attack counts up, tolerates mistakes, and stops after all ten pairs',()=>{
+ const g=createGame('memory',()=>.25,true);
+ assert.equal(g.deck.length,20); assert.equal(new Set(g.deck).size,10);
+ advance(g,20); assert.equal(g.status,'running'); assert.ok(g.elapsed>19);
+ const a=0,b=g.deck.findIndex(v=>v!==g.deck[a]); flipCard(g,a);flipCard(g,b);advance(g,.8);
+ assert.equal(g.status,'running');assert.equal(g.lives,8);
+ for(let value=0;value<10;value++) { const pair=g.deck.flatMap((v,i)=>v===value?[i]:[]); pair.forEach(i=>flipCard(g,i));advance(g,.8); }
+ assert.equal(g.status,'won');assert.equal(g.matched.length,20);
+ const elapsed=g.elapsed;advance(g,10);assert.equal(g.elapsed,elapsed);
 });
 test('leaderboards sort descending, retain earlier ties, cap at ten, and format time',async()=>{
   const source=fs.readFileSync(new URL('../src/game/rankings.ts',import.meta.url),'utf8').replaceAll('import.meta.env','({})');
@@ -118,6 +122,11 @@ test('submitted records persist and portal ownership follows the best record onl
     boards=await submitRecord(1,'Bob','dragon',3);assert.equal(boards[1][0].value,6);assert.equal(boards[1][0].team,'unicorn');
     assert.deepEqual(await fetchBoards(),boards);
     assert.equal(boards[0].length,0);
+    await submitRecord(4,'Alice','dragon',50000);
+    boards=await submitRecord(4,'Bob','unicorn',40000);assert.equal(boards[4][0].team,'unicorn');
+    boards=await submitRecord(4,'Alice','dragon',30000);assert.equal(boards[4][0].value,30000);
+    boards=await submitRecord(4,'Alice','unicorn',60000);assert.equal(boards[4][0].value,30000);assert.equal(boards[4][0].team,'dragon');
+    assert.deepEqual((await fetchBoards())[4],boards[4]);
     await assert.rejects(submitRecord(1,' ','dragon',7));
   }finally{delete globalThis.localStorage;}
 });
@@ -131,12 +140,31 @@ test('online submission accepts an empty success response then refreshes the ran
   globalThis.fetch=async(url)=>{
     paths.push(url);
     if(url.endsWith('/auth/v1/signup'))return new Response(JSON.stringify({access_token:'test-session',refresh_token:'test-refresh',expires_in:3600}));
+    if(url.endsWith('/portal_memory_top_ten'))return new Response('[]');
     if(url.endsWith('/portal_submit_record'))return new Response(null,{status:204});
     return new Response(JSON.stringify([{zone_id:1,nickname:'Test',team:'dragon',value:1,player_id:'test',created_at:'2026-10-09'}]));
   };
   try{
     const {submitRecord}=await import(`data:text/javascript;base64,${Buffer.from(code).toString('base64')}`);
     const boards=await submitRecord(1,'Test','dragon',1);
-    assert.equal(boards[1][0].nickname,'Test');assert.equal(paths.length,3);
+    assert.equal(boards[1][0].nickname,'Test');assert.equal(paths.length,4);
   }finally{globalThis.fetch=savedFetch;delete globalThis.localStorage;}
+});
+
+test('survival snake has no food deadline or overall time limit', () => {
+  const g = createGame('snake', () => .25, true);
+  g.food = { x: 10, y: 10 };
+  for (let frame = 0; frame < 10000; frame++) {
+    const head = g.snake[0];
+    if (g.direction.x === 1 && head.x === 17) turnSnake(g, 0, -1);
+    if (g.direction.y === -1 && head.y === 2) turnSnake(g, -1, 0);
+    if (g.direction.x === -1 && head.x === 2) turnSnake(g, 0, 1);
+    if (g.direction.y === 1 && head.y === 7) turnSnake(g, 1, 0);
+    stepGame(g, blankInput(), .02);
+  }
+  assert.equal(g.status, 'running');
+  assert.equal(g.score, 0);
+  assert.ok(g.elapsed > 199);
+  assert.equal(g.time, g.elapsed);
+  assert.equal(g.lives, 1);
 });

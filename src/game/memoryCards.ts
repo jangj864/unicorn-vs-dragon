@@ -1,0 +1,11 @@
+import card0 from "../imports/memory/card-0.png";
+import card1 from "../imports/memory/card-1.png";
+import card2 from "../imports/memory/card-2.png";
+import card3 from "../imports/memory/card-3.png";
+import card4 from "../imports/memory/card-4.png";
+import card5 from "../imports/memory/card-5.png";
+import card6 from "../imports/memory/card-6.png";
+import card7 from "../imports/memory/card-7.png";
+import card8 from "../imports/memory/card-8.png";
+import card9 from "../imports/memory/card-9.png";
+export const memoryCards = [card0,card1,card2,card3,card4,card5,card6,card7,card8,card9];

@@ -66,3 +66,8 @@
 .rune { background: repeating-linear-gradient(45deg,#233549 0 4px,#203145 4px 8px); border: 3px solid #8b8272; box-shadow: inset 0 0 0 3px #0b1928,inset 0 0 0 5px #4e6072,4px 4px 0 #030b14; }
 .rune::before,.rune::after { content: ''; position: absolute; width: 4px; height: 4px; background: #d0b88a; box-shadow: 1px 1px 0 #040b12; pointer-events: none; }.rune::before { top: 7px; left: 7px; }.rune::after { bottom: 7px; right: 7px; }
 .rune svg { filter: drop-shadow(2px 3px 0 #06141a); }.rune.revealed { background: repeating-linear-gradient(0deg,#334351 0 4px,#2e3c48 4px 6px); }.rune.matched { background: repeating-linear-gradient(45deg,#254a46 0 4px,#21403f 4px 8px); }
+.rune-board { grid-template-columns: repeat(5,minmax(0,1fr)); grid-template-rows: repeat(4,minmax(0,1fr)); gap: 7px; padding: 12px; }
+.rune img { display:block; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; }
+.rune.revealed,.rune.matched { display:block; padding:0; overflow:hidden; }
+.rune.matched { outline:2px solid #8be8cb; outline-offset:-2px; }
+.rune.revealed::before,.rune.revealed::after,.rune.matched::before,.rune.matched::after { display:none; }

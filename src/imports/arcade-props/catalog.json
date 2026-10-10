@@ -1,0 +1,110 @@
+[
+  {
+    "name": "runner-platform",
+    "file": "runner-platform.png",
+    "status": "portal-runner",
+    "source": "codex-clipboard-22d971ce-aa08-4f54-98fb-cb043ff049a1.png"
+  },
+  {
+    "name": "runner-pillar",
+    "file": "runner-pillar.png",
+    "status": "portal-runner",
+    "source": "codex-clipboard-97e15778-1a95-4091-8323-f2d5fd48820d.png"
+  },
+  {
+    "name": "runner-crate",
+    "file": "runner-crate.png",
+    "status": "portal-runner",
+    "source": "codex-clipboard-330b08a7-2258-45b8-a048-6c0408bac0d6.png"
+  },
+  {
+    "name": "runner-cracked-block",
+    "file": "runner-cracked-block.png",
+    "status": "portal-runner",
+    "source": "codex-clipboard-145c2b7e-ee1c-453f-8d45-a54664e565f6.png"
+  },
+  {
+    "name": "unicorn-egg",
+    "file": "unicorn-egg.png",
+    "status": "reserved",
+    "source": "codex-clipboard-c6b4ccec-06d9-43ee-9b3c-00163d8a67c8.png"
+  },
+  {
+    "name": "dragon-egg",
+    "file": "dragon-egg.png",
+    "status": "reserved",
+    "source": "codex-clipboard-c872ee4e-8fd1-4126-bf9d-8e8c04b2f3fd.png"
+  },
+  {
+    "name": "unicorn-crystal",
+    "file": "unicorn-crystal.png",
+    "status": "reserved",
+    "source": "codex-clipboard-92aca3b3-c8ca-4132-98d8-02bf042267ce.png"
+  },
+  {
+    "name": "dragon-crystal",
+    "file": "dragon-crystal.png",
+    "status": "reserved",
+    "source": "codex-clipboard-a61abb97-9c44-44e1-b2e4-c0466daad4d2.png"
+  },
+  {
+    "name": "arcane-crate",
+    "file": "arcane-crate.png",
+    "status": "reserved",
+    "source": "codex-clipboard-1d08d32d-10fb-48dc-9b9c-636a479c98ec.png"
+  },
+  {
+    "name": "arcane-jump-pad",
+    "file": "arcane-jump-pad.png",
+    "status": "reserved",
+    "source": "codex-clipboard-56304b8a-1f0e-4bfd-b98a-bb65752c0cd5.png"
+  },
+  {
+    "name": "unicorn-ship",
+    "file": "unicorn-ship.png",
+    "status": "sky-invader",
+    "source": "codex-clipboard-0a3eed0e-08f9-491e-bce6-067d1bbe1c6e.png"
+  },
+  {
+    "name": "dragon-ship",
+    "file": "dragon-ship.png",
+    "status": "sky-invader",
+    "source": "codex-clipboard-eab55f65-f406-4b73-9cee-8139ff3543db.png"
+  },
+  {
+    "name": "unicorn-chest",
+    "file": "unicorn-chest.png",
+    "status": "reward-chest",
+    "source": "codex-clipboard-cac99175-bf63-4e63-a78c-cba223e5670b.png"
+  },
+  {
+    "name": "dragon-chest",
+    "file": "dragon-chest.png",
+    "status": "reward-chest",
+    "source": "codex-clipboard-d432d819-dad3-480a-a82b-408c5a9c6178.png"
+  },
+  {
+    "name": "unicorn-head",
+    "file": "unicorn-head.png",
+    "status": "sky-invader",
+    "source": "codex-clipboard-9dee8153-fad9-4283-bcad-aef16d561708.png"
+  },
+  {
+    "name": "dragon-head",
+    "file": "dragon-head.png",
+    "status": "sky-invader",
+    "source": "codex-clipboard-6d1cd939-1ebe-49cd-9907-b3bc52f49624.png"
+  },
+  {
+    "name": "unicorn-shot",
+    "file": "unicorn-shot.png",
+    "status": "sky-invader",
+    "source": "codex-clipboard-2673a03a-8307-41f0-8baf-8d4c03750892.png"
+  },
+  {
+    "name": "dragon-shot",
+    "file": "dragon-shot.png",
+    "status": "sky-invader",
+    "source": "codex-clipboard-d3132cd6-eaf2-467b-b3cd-d8612a607813.png"
+  }
+]

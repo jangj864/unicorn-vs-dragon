@@ -14,11 +14,19 @@ export type Game = {
   deck: number[]; open: number[]; matched: number[]; reveal: number; moves: number;
 };
 export const WIDTH = 480, HEIGHT = 360;
+export const runnerObstacle = (point: number) => {
+  const variants = [
+    { kind: "crate", width: 36, height: 35 },
+    { kind: "pillar", width: 26, height: 50 },
+    { kind: "block", width: 47, height: 22 },
+  ] as const;
+  return variants[Math.floor(point / 100) % variants.length];
+};
 export const blankInput = (): Input => ({ left: false, right: false, fire: false, jump: false });
 const clamp = (value: number, low: number, high: number) => Math.min(high, Math.max(low, value));
 
 export function createGame(mode: Mode, random = Math.random, survival = false): Game {
-  const deck = [0,1,2,3,4,5,0,1,2,3,4,5];
+  const deck = mode === "memory" && survival ? Array.from({length:20}, (_,i)=>i%10) : [0,1,2,3,4,5,0,1,2,3,4,5];
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -68,7 +76,7 @@ export function stepGame(g: Game, input: Input, seconds: number, random = Math.r
   g.cooldown = Math.max(0,g.cooldown-dt); g.immune = Math.max(0,g.immune-dt);
   if (!g.survival && g.time <= 0) { g.status="lost"; return; }
   if (g.mode === "snake") {
-    if(g.survival && g.pressure > 14){g.lives=0;g.status="lost";return;}
+
     g.tick += dt;
     if (g.tick < Math.max(.105,.19-g.score*.012)) return;
     g.tick=0; g.direction={...g.queued};
@@ -127,25 +135,26 @@ export function stepGame(g: Game, input: Input, seconds: number, random = Math.r
     input.jump=false;g.velocity-=1000*dt;g.height=Math.max(0,g.height+g.velocity*dt);if(g.height===0)g.velocity=0;
     g.distance+=(140+(g.survival?Math.min(130,g.elapsed*.65):0))*dt;g.score=g.survival?Math.floor(g.distance):Math.min(100,Math.floor(g.distance/30));
     if(g.survival){g.obstacles=g.obstacles.filter(x=>x>g.distance-80);while((g.obstacles.at(-1)??0)<g.distance+900)g.obstacles.push((g.obstacles.at(-1)??g.distance)+290+random()*150);g.coins=g.coins.filter(x=>x>g.distance-80);}
-    for(const obstacle of g.obstacles){const x=obstacle-g.distance+80;if(x<101&&x+24>61&&g.height<33)damage(g);}
+    for(const obstacle of g.obstacles){const x=obstacle-g.distance+80;if(x<101&&x+runnerObstacle(obstacle).width>61&&g.height<runnerObstacle(obstacle).height)damage(g);}
     g.coins=g.coins.filter(coin=>{const x=coin-g.distance+80;return !(Math.abs(x-80)<24&&Math.abs(g.height-45)<38);});
   } else if(g.mode === "memory") {
-    if(g.survival&&g.pressure>Math.max(3,9-g.wave*.4)){g.lives--;g.pressure=0;g.open=[];g.reveal=0;if(g.lives<=0)g.status="lost";}
+
     if(g.reveal>0){
     g.reveal=Math.max(0,g.reveal-dt);
     if(g.reveal===0){
       if(g.deck[g.open[0]]===g.deck[g.open[1]]){g.matched.push(...g.open);g.score++;}
-      else {g.lives--;if(g.lives<=0)g.status="lost";}
+      else if (!g.survival) {g.lives--;if(g.lives<=0)g.status="lost";}
       g.open=[];g.pressure=0;
+      if (g.survival && g.matched.length === g.deck.length) g.status="won";
     }
     }
   }
   if(g.survival&&g.status==="running"){
-    if((g.mode==="breakout"&&g.bricks.every(b=>!b.alive))||(g.mode==="invader"&&g.enemies.every(e=>!e.alive))||(g.mode==="memory"&&g.matched.length===12)){
+    if((g.mode==="breakout"&&g.bricks.every(b=>!b.alive))||(g.mode==="invader"&&g.enemies.every(e=>!e.alive))){
       const next=createGame(g.mode,random,true);g.wave++;g.pressure=0;
       if(g.mode==="breakout"){g.bricks=next.bricks;g.ball={...next.ball,vx:110+Math.min(80,g.wave*8),vy:-170-Math.min(100,g.wave*10)};}
       if(g.mode==="invader"){g.enemies=next.enemies;g.bullets=[];g.enemyClock=0;}
-      if(g.mode==="memory"){g.deck=next.deck;g.open=[];g.matched=[];g.reveal=0;}
+
     }
     if(g.mode==="snake"&&g.snake.length>=280){const next=createGame("snake",random,true);g.snake=next.snake;g.food=next.food;g.direction=next.direction;g.queued=next.queued;g.wave++;}
   } else if(g.status==="running"&&g.score>=g.target)g.status="won";
