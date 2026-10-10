@@ -292,7 +292,7 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
             {step > 0 && <div className="archive-status"><span>NYC OCCULT DEFENSE BUREAU</span><b>SECURITY LEVEL // 08</b></div>}
             <div className="file-stack">
             <div className={`book-sheet current-sheet ${isTurning && turnDirection === "next" ? "sheet-outgoing" : ""}`}>{renderFile(step)}</div>
-            {turnTarget !== null && turnTarget < 4 && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget, true)}</div>}
+            {turnTarget !== null && turnTarget < 4 && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget)}</div>}
             <div className="page-underlay" aria-hidden="true" />
             </div>
             <div className="story-controls">
@@ -404,7 +404,7 @@ function StoryboardTutorial({ locale, team, scene, onPrevious, onNext, onSkip }:
         {safeScene === 3 && <><div className="brief-city" aria-hidden="true" /><div className="brief-versus"><PixelDragon /><b>VS</b><PixelUnicorn flipped /></div></>}
         {safeScene === 4 && <div className="brief-map pixel-map"><div className="map-canvas"><img className="nyc-road-atlas" src={nycTacticalMap} alt="" draggable={false} />{zones.map((item) => <div key={item.id} className="zone-node owner-guide" style={{ left: `${item.x}%`, top: `${item.y}%` }}><ManholePortal /><span className="zone-name owner-guide"><b>{locale === "ko" ? item.ko : item.en}</b></span></div>)}</div></div>}
         {safeScene === 5 && <><div className="brief-city" aria-hidden="true" /><div className="brief-rps">{(["rock", "paper", "scissors"] as Rps[]).map((move) => <div className="brief-rps-card" key={move}><RpsIcon type={move} /><b>{copy[locale][move]}</b></div>)}</div><div className="brief-guardian">{guardian}</div><span className="brief-rule">{locale === "ko" ? "최장 연승 1위가 포탈 점령" : "LONGEST STREAK · #1 CLAIMS THE PORTAL"}</span></>}
-        {safeScene === 6 && <div className="brief-run"><div className="run-guardian">{guardian}</div><span className="brief-coin">✦</span><i className="brief-pipe" /><ManholePortal active /></div>}
+        {safeScene === 6 && <div className="arcade-briefing"><header className="arcade-briefing-header"><span>PORTAL RUNNER</span><b>{locale === "ko" ? "장애물을 뛰어넘으세요" : "JUMP & SURVIVE"}</b></header><GamePreview team={team} mode="runner" background={landmarkBackgrounds[3]} label="Portal Runner gameplay" /><div className="arcade-briefing-controls"><span>{locale === "ko" ? "조작 방법" : "CONTROLS"}</span><b>SPACE / ↑ / TAP</b></div></div>}
         {safeScene >= 7 && safeScene <= 10 && <ArcadeBriefing team={team} index={safeScene - 7} locale={locale} />}
         {safeScene === 11 && <div className={`reward-scene reward-${team}`}><div className="brief-city" aria-hidden="true" /><div className="reward-heading"><span>MISSION COMPLETE</span><h3>{locale === "ko" ? "새로운 구역을 확보했습니다" : "DISTRICT SECURED"}</h3><p>{locale === "ko" ? "당신의 진영이 뉴욕에 한 걸음 더 가까워졌습니다" : "One more district. One step closer to New York."}</p></div><div className="reward-display"><div className="reward-pedestal">{guardian}</div><div className="reward-loot"><ManholePortal owner={team} /><PixelChest team={team} /></div></div><div className="reward-summary"><div><small>LEADERBOARD</small><strong>TOP 10</strong></div><div><small>PORTAL OWNER</small><strong>RANK #1</strong></div></div><span className="reward-note">{locale === "ko" ? "기록 등록 → 순위 결정 → 1위 진영 점령" : "SUBMIT → RANK → #1 CONTROLS THE PORTAL"}</span></div>}
       </div>
@@ -596,7 +596,7 @@ export default function App() {
           <p>{t.missionBody}</p>
           <div className="city-control">
             <span>{t.cityWar}</span>
-            <div><i className="dragon-fill" style={{ width: `${scores.dragon}%` }} /><i className="unicorn-fill" style={{ width: `${scores.unicorn}%` }} /></div>
+            <div className="score-track ranked-control-track"><i style={{ width: `${scores.dragon}%` }} /><span style={{ width: `${scores.unicorn}%` }} /></div>
             <p><b>DRAGON {scores.dragon}%</b><b>UNICORN {scores.unicorn}%</b></p>
           </div>
           <div className="team-status">
@@ -653,6 +653,7 @@ export default function App() {
               background={landmarkBackgrounds[zone.id]}
               locale={locale}
               guardian={team === "dragon" ? dragonArt[guardianLevel] : unicornArt[guardianLevel]}
+                guardianLevel={guardianLevel}
               onFinish={(milliseconds) => setPendingRecord(milliseconds)}
               onExit={() => setInBattle(false)}
             />
@@ -686,7 +687,7 @@ export default function App() {
               <h2>{locale === "ko" ? zone.ko : zone.en}</h2>
               <div className="portal-inspector" style={{ backgroundImage: `linear-gradient(#08132150, #08132180), url("${landmarkBackgrounds[zone.id]}")`, backgroundSize: "cover", backgroundPosition: "center" }}><ManholePortal owner={owners[zone.id]} /><div className="street-lines" /></div>
               <div className={`portal-meta owner-${owners[zone.id] ?? "neutral"}`}><span>{t.portal}</span><b>NYC–0{zone.id + 1}</b><small>{owners[zone.id] ? `${t.occupied} // ${owners[zone.id]?.toUpperCase()}` : `${t.neutral} // ${zone.danger * 240} PX DEPTH`}</small></div>
-              <div className="portal-game game-preview-row"><div className="game-preview-thumbnail" aria-hidden="true">{zone.game === "rps" ? <RpsIcon type="scissors" /> : zone.game === "runner" ? <PixelDragon level={3} /> : <ArcadeBriefing team={team} index={["snake", "breakout", "memory", "invader"].indexOf(zone.game)} locale={locale} />}</div><div><span>ARCADE // {gameInfo[zone.game].code}</span><b>{locale === "ko" ? gameInfo[zone.game].ko : gameInfo[zone.game].en}</b></div></div>
+              <div className="portal-game game-preview-row"><div className="game-preview-thumbnail" aria-hidden="true">{zone.game === "rps" ? <RpsIcon type="scissors" /> : zone.game === "runner" ? <GamePreview team={team} mode="runner" background={landmarkBackgrounds[zone.id]} label="Portal Runner gameplay" /> : <ArcadeBriefing team={team} index={["snake", "breakout", "memory", "invader"].indexOf(zone.game)} locale={locale} />}</div><div><span>ARCADE // {gameInfo[zone.game].code}</span><b>{locale === "ko" ? gameInfo[zone.game].ko : gameInfo[zone.game].en}</b></div></div>
               <PixelButton onClick={() => { restart(); setGameMode(zone.game); setInBattle(true); }}>{locale === "ko" ? "게임 시작" : "START GAME"} <span>▶</span></PixelButton>
             </>
           ) : gameMode === "runner" ? (

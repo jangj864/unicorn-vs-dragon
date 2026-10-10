@@ -1547,3 +1547,21 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 img.loot-sprite { object-fit: contain; }
 
 .brief-memory-board { grid-template-columns:repeat(5,minmax(0,1fr)); }.preview-rune img { width:100%;height:100%;object-fit:contain;image-rendering:pixelated; }
+
+/* Match the header's faction positions and neutral remainder. */
+.city-control > .ranked-control-track { display: block; height: 9px; background: #37414b; }
+.brief-map.pixel-map .map-canvas { width: 100%; height: 100%; }
+.brief-map.pixel-map .nyc-road-atlas { object-fit: fill; }
+.brief-map .zone-node .manhole { width: clamp(30px,4.5cqw,48px); height: clamp(30px,4.5cqw,48px); left: 0; top: 0; translate: -50% -50%; }
+.game .zone-node .manhole { width: clamp(44px,6cqw,66px); height: clamp(44px,6cqw,66px); }
+.game-preview-thumbnail > canvas { width: 80px; height: 60px; image-rendering: pixelated; }
+/* Transparent reward artwork retains its original colors. */
+img.loot-sprite { mix-blend-mode: normal; }
+.reward-loot { mix-blend-mode: normal; }
+img.loot-sprite { filter: none; }
+
+/* Turn onto a blank sheet; only the live page starts typing afterward. */
+.archive-reader .destination-sheet article > * { visibility: hidden; }
+.archive-reader .current-sheet .evidence,
+.archive-reader .current-sheet .file-footer strong { animation: none; }
+.archive-reader .file-stack::after { display: none; }

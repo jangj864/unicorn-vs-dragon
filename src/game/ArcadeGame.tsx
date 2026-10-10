@@ -1,3 +1,5 @@
+import { loadBreakoutArt, drawBreakoutArt } from "./breakoutArt";
+import { drawRunnerCharacter, loadRunnerCharacter } from "./runnerCharacter";
 import { memoryCards } from "./memoryCards";
 import { drawInvaderArt, loadInvaderArt, type InvaderArt } from "./invaderArt";
 import { drawRunnerArt, loadRunnerArt } from "./runnerArt";
@@ -8,7 +10,7 @@ import { blankInput, createGame, flipCard, stepGame, turnSnake, WIDTH, HEIGHT, t
 
 import "./arcade.css";
 
-type Props = { team: "dragon" | "unicorn"; mode: Mode; locale: "ko" | "en"; guardian: string; background: string; onFinish: (milliseconds: number) => void; onExit: () => void };
+type Props = { team: "dragon" | "unicorn"; mode: Mode; locale: "ko" | "en"; guardian: string; guardianLevel?: number; background: string; onFinish: (milliseconds: number) => void; onExit: () => void };
 const names = {
   snake: ["서펀트 스네이크", "SERPENT SNAKE"], breakout: ["브릭 브레이커", "BRICK BREAKER"],
   memory: ["룬 메모리", "RUNE MEMORY"], invader: ["스카이 인베이더", "SKY INVADER"], runner: ["포탈 러너", "PORTAL RUNNER"],
@@ -26,7 +28,7 @@ function sprite(ctx: CanvasRenderingContext2D, rows: string[], x: number, y: num
   rows.forEach((row, j)=>[...row].forEach((cell,i)=>{if(cell==="1"){const px=Math.round(x+i*unit),py=Math.round(y+j*unit);ctx.fillStyle=color;ctx.fillRect(px,py,unit,unit);ctx.fillStyle=rows[j-1]?.[i]!=="1"?"#ffffff80":"#00000030";ctx.fillRect(px,py,unit,1);if((i+j)%3===0){ctx.fillStyle="#fff1b944";ctx.fillRect(px,py,1,unit);}}}));
 }
 
-export function draw(ctx: CanvasRenderingContext2D, g: Game, backdrop: HTMLImageElement, guardian: HTMLImageElement, snakeSkin?: SnakeSkin, runnerArt?: HTMLImageElement[], invaderArt?: InvaderArt) {
+export function draw(ctx: CanvasRenderingContext2D, g: Game, backdrop: HTMLImageElement, guardian: HTMLImageElement, snakeSkin?: SnakeSkin, runnerArt?: HTMLImageElement[], invaderArt?: InvaderArt, runnerHero?: ReturnType<typeof loadRunnerCharacter>, breakoutArt?: ReturnType<typeof loadBreakoutArt>) {
   ctx.imageSmoothingEnabled=false;
   ctx.fillStyle="#071320";ctx.fillRect(0,0,WIDTH,HEIGHT);
   if(backdrop.complete&&backdrop.naturalWidth){ctx.globalAlpha=g.mode==="runner"?.7:.6;const scale=Math.max(WIDTH/backdrop.naturalWidth,HEIGHT/backdrop.naturalHeight);const w=backdrop.naturalWidth*scale,h=backdrop.naturalHeight*scale;ctx.drawImage(backdrop,(WIDTH-w)/2,HEIGHT-h,w,h);ctx.globalAlpha=1;}
@@ -45,8 +47,10 @@ export function draw(ctx: CanvasRenderingContext2D, g: Game, backdrop: HTMLImage
     }
     sprite(ctx,runePatterns[0],23+g.food.x*22,29+g.food.y*22,3,"#f0c85c");
   }else if(g.mode==="breakout"){
+    if (!breakoutArt || !drawBreakoutArt(ctx,g,breakoutArt)) {
     g.bricks.forEach((b,i)=>{if(!b.alive)return;ctx.fillStyle=["#dc706d","#e4bc59","#63bdb9","#7799c5"][Math.floor(i/6)];ctx.fillRect(b.x,b.y,68,18);ctx.fillStyle="#ffffff50";ctx.fillRect(b.x+3,b.y+2,62,3);ctx.fillStyle="#00000055";ctx.fillRect(b.x,b.y+14,68,4);ctx.fillStyle="#101c3066";ctx.fillRect(b.x+22,b.y+4,2,10);ctx.fillRect(b.x+45,b.y+4,2,10);ctx.fillRect(b.x+3,b.y+9,62,1);ctx.fillStyle="#fff2be88";ctx.fillRect(b.x+4,b.y+4,3,3);ctx.fillRect(b.x+61,b.y+4,3,3);});
     ctx.fillStyle="#f0c85c";ctx.fillRect(g.paddle-40,316,80,10);ctx.fillStyle="#fff0b0";ctx.fillRect(g.paddle-33,316,66,3);ctx.fillStyle="#476575";ctx.fillRect(g.paddle-40,315,8,12);ctx.fillRect(g.paddle+32,315,8,12);ctx.fillStyle="#111e2b";for(let n=-24;n<28;n+=8)ctx.fillRect(g.paddle+n,321,4,3);
+    }
     ctx.fillStyle="#fff4ce";ctx.fillRect(g.ball.x-4,g.ball.y-4,8,8);ctx.fillStyle="#fff";ctx.fillRect(g.ball.x-3,g.ball.y-3,3,3);ctx.fillStyle="#b58248";ctx.fillRect(g.ball.x-3,g.ball.y+3,6,2);
     if(g.ball.docked){ctx.fillStyle="#f0c85c";ctx.font="10px monospace";ctx.textAlign="center";ctx.fillText("SPACE / LAUNCH",240,345);}
   }else if(g.mode==="invader"){
@@ -64,7 +68,7 @@ export function draw(ctx: CanvasRenderingContext2D, g: Game, backdrop: HTMLImage
     }
     for(const point of g.coins){const x=point-g.distance+80;if(x>0&&x<480)sprite(ctx,runePatterns[0],x-7,247,3,"#ffe07e");}
     if(g.immune===0||Math.floor(g.elapsed*12)%2===0){
-      if(guardian.complete&&guardian.naturalWidth)ctx.drawImage(guardian,46,244-g.height,68,68);
+      if(runnerHero && drawRunnerCharacter(ctx,g,runnerHero)) { /* Running art is aligned to the ground. */ }
       else sprite(ctx,shipPixels,64,270-g.height,4,"#79e6dd");
     }
     const portalX=g.survival?Infinity:3000-g.distance+80;
@@ -73,7 +77,7 @@ export function draw(ctx: CanvasRenderingContext2D, g: Game, backdrop: HTMLImage
   ctx.strokeStyle="#496077";ctx.lineWidth=2;ctx.strokeRect(1,1,478,358);
 }
 
-export default function ArcadeGame({team,mode,locale,guardian,background,onFinish,onExit}:Props){
+export default function ArcadeGame({team,mode,locale,guardian,guardianLevel=1,background,onFinish,onExit}:Props){
   const ko=locale==="ko",lang=ko?0:1;
   const game=useRef<Game>(createGame(mode, Math.random, true));
   const input=useRef(blankInput());
@@ -85,19 +89,21 @@ export default function ArcadeGame({team,mode,locale,guardian,background,onFinis
   const reset=()=>{game.current=createGame(mode, Math.random, true);input.current=blankInput();claimed.current=false;setPhase("ready");refresh(n=>n+1);};
   useEffect(()=>{
     const image=new Image();image.src=background;const hero=new Image();hero.src=guardian;
+    const breakoutArt = mode === "breakout" ? loadBreakoutArt(team) : undefined;
     const invaderArt = mode === "invader" ? loadInvaderArt(team) : undefined;
     const runnerArt = mode === "runner" ? loadRunnerArt() : undefined;
+    const runnerHero = mode === "runner" ? loadRunnerCharacter(team,guardianLevel) : undefined;
     const snakeSkin = mode === "snake" ? loadSnakeSkin(team) : undefined;
     let frame=0,last=0,update=0;
     const loop=(now:number)=>{
       const dt=last?Math.min(.04,(now-last)/1000):0;last=now;
       if(phase==="play")stepGame(game.current,input.current,dt);
-      const context=canvas.current?.getContext("2d");if(context)draw(context,game.current,image,hero,snakeSkin,runnerArt,invaderArt);
+      const context=canvas.current?.getContext("2d");if(context)draw(context,game.current,image,hero,snakeSkin,runnerArt,invaderArt,runnerHero,breakoutArt);
       if(now-update>80){refresh(n=>n+1);update=now;}
       frame=requestAnimationFrame(loop);
     };
     frame=requestAnimationFrame(loop);return()=>cancelAnimationFrame(frame);
-  },[phase,guardian,background,team,mode]);
+  },[phase,guardian,guardianLevel,background,team,mode]);
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
       const target=e.target as HTMLElement;
