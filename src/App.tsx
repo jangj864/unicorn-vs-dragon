@@ -1,7 +1,9 @@
 import { memoryCards } from "./game/memoryCards";
+import RpsCombat, { ROUND_DURATION } from "./game/RpsCombat";
 import unicornChest from "./imports/arcade-props/unicorn-chest.png";
 import dragonChest from "./imports/arcade-props/dragon-chest.png";
 import ArchiveText from "./game/ArchiveText";
+import { archiveStories, archiveEvidence } from "./game/archiveStories";
 import BootScreen from "./game/BootScreen";
 import Leaderboard, { RecordEntry } from "./game/Leaderboard";
 import { fetchBoards, submitRecord, type Boards } from "./game/rankings";
@@ -230,19 +232,23 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
   const turnTimers = useRef<number[]>([]);
   const t = copy[locale];
   const story = locale === "ko" ? [
-    { code: "FILE 00–X", title: "기밀문서", lead: "과거, 이 도시에는 유니콘과 드래곤이 존재했다.", body: "인류가 기억을 지우기 전까지 그들은 맨해튼의 하늘과 지하를 나누어 지배했다. 이 기록은 2091년까지 봉인되었다.", stamp: "CLASSIFIED" },
-    { code: "ARCHIVE 01", title: "지워진 두 종족", lead: "대전쟁 이후, 생존자들은 인간의 눈을 피해 숨어들었다.", body: "드래곤은 폐쇄된 지하철 터널로, 유니콘은 버려진 고층 건물로 사라졌다. 그들의 존재는 도시 전설이 되었다.", stamp: "EYES ONLY" },
+    { code: "FILE 00–X", title: "기밀문서", lead: "유니콘은 원래 인간의 친구였다. 뉴욕에서는 꽤 오래 잘 지냈다.", body: "공원에서 함께 놀고, 이웃과 인사하고, 가끔 택시도 잡아줬다. 물론 뒷좌석에는 못 탔다. 평범했던 일상이 이상해진 뒤, 조사국은 관련 자료를 모았다. 이 기록은 2026년까지 봉인되었다.", stamp: "CLASSIFIED" },
+    { code: "ARCHIVE 01", title: "도시의 두 가지 기록", lead: "같은 뉴욕에서, 전혀 다른 두 이야기가 기록되기 시작했다.", body: "첫 번째 파일에는 인간과 함께 살던 유니콘들의 일상이 담겼다. 두 번째에는 갑작스러운 드래곤 출몰 신고가 쌓였다. 조사국은 우선 이웃들의 앨범부터 펼쳤다. 거대한 날개 이야기는 잠시 뒤에 나온다.", stamp: "EYES ONLY" },
     { code: "INCIDENT 77", title: "맨홀 아래의 균열", lead: "그러나 맨해튼의 맨홀들이 다시 빛나기 시작했다.", body: "모든 맨홀은 잃어버린 왕국으로 이어지는 포탈이다. 두 진영은 도시를 되찾기 위해 포탈 하나씩을 두고 결투를 시작했다.", stamp: "ACTIVE THREAT" },
   ] : [
-    { code: "FILE 00–X", title: "CLASSIFIED DOCUMENT", lead: "Once, unicorns and dragons lived in this city.", body: "Before humanity erased the evidence, they divided Manhattan's sky and undercity. This record was sealed until 2091.", stamp: "CLASSIFIED" },
-    { code: "ARCHIVE 01", title: "THE ERASED SPECIES", lead: "After the Great War, the survivors vanished from human sight.", body: "Dragons descended into abandoned subway tunnels. Unicorns occupied hollow towers. Their existence became an urban myth.", stamp: "EYES ONLY" },
+    { code: "FILE 00–X", title: "CLASSIFIED DOCUMENT", lead: "Unicorns used to be friends with humans. For years, New York suited them.", body: "They played in parks, knew their neighbors, and even hailed taxis—though fitting in the back seat was another matter. When ordinary life turned strange, the bureau collected these files. This record was sealed until 2026.", stamp: "CLASSIFIED" },
+    { code: "ARCHIVE 01", title: "TWO CITY FILES", lead: "Two very different stories began unfolding in the same New York.", body: "One file followed unicorns sharing everyday life with humans. The other collected reports of sudden dragon appearances. Investigators opened the neighbors' photo albums first. The enormous wings would have to wait a few pages.", stamp: "EYES ONLY" },
     { code: "INCIDENT 77", title: "THE RIFT BELOW", lead: "Now Manhattan's manholes are glowing again.", body: "Each manhole is a portal to the lost realm. Hidden factions battle one portal at a time to reclaim the city.", stamp: "ACTIVE THREAT" },
   ];
+
+  story.splice(2, 0, ...archiveStories[locale]);
+  const factionStep = story.length + 1;
+  const tutorialStep = factionStep + 1;
 
   useEffect(() => () => turnTimers.current.forEach(window.clearTimeout), []);
 
   const navigateFile = (target: number) => {
-    if (isTurning || target < 0 || target > 4) return;
+    if (isTurning || target < 0 || target > factionStep) return;
     turnTimers.current.forEach(window.clearTimeout);
     const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900;
     setTurnDirection(target > step ? "next" : "back");
@@ -259,22 +265,23 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
 
   const renderFile = (page: number, preview = false) => (page === 0 ? (
               <article className="classified-cover" key="cover">
-                <div className="cover-identity"><span>NYC / OCCULT DEFENSE BUREAU</span><h1><ArchiveText text={locale === "ko" ? "기밀 조사 보고서" : "CLASSIFIED REPORT"} instant={preview} /></h1><p>{locale === "ko" ? "맨해튼 비인간 활동 기록" : "MANHATTAN NON-HUMAN ACTIVITY"}</p><div className="cover-rule" /><b>CASE FILE / 00–X</b><small>AUTHORIZED PERSONNEL ONLY<br />ARCHIVE RELEASE / 2091</small></div><img src={classifiedCover} alt={locale === "ko" ? "기밀 조사 보고서 표지" : "Classified investigation report cover"} draggable={false} />
+                <div className="cover-identity"><span>NYC / OCCULT DEFENSE BUREAU</span><h1><ArchiveText text={locale === "ko" ? "기밀 조사 보고서" : "CLASSIFIED REPORT"} instant={preview} /></h1><p>{locale === "ko" ? "맨해튼 비인간 활동 기록" : "MANHATTAN NON-HUMAN ACTIVITY"}</p><div className="cover-rule" /><b>CASE FILE / 00–X</b><small>AUTHORIZED PERSONNEL ONLY<br />ARCHIVE RELEASE / 2026</small></div><img src={classifiedCover} alt={locale === "ko" ? "기밀 조사 보고서 표지" : "Classified investigation report cover"} draggable={false} />
               </article>
             ) : <article className="classified-file" key={page}>
               <div className="file-edge" />
-              <div className="file-meta"><span>{story[page - 1].code}</span><span>09.28.2091</span></div>
+              <div className="file-meta"><span>{story[page - 1].code}</span><span>09.28.2026</span></div>
               <div className="redaction">██████ █████ ███</div>
               <p className="file-kicker">NYC // NON-HUMAN ACTIVITY</p>
               <h1><ArchiveText text={story[page - 1].title} instant={preview} /></h1>
               <p className="file-lead"><ArchiveText text={story[page - 1].lead} delay={650} instant={preview} /></p>
-              <div className={`evidence evidence-${page - 1}`}>
+              <div className={`evidence ${page > 2 && page < story.length ? "archive-photo-pair" : `evidence-${page === story.length ? 2 : page - 1}`}`}>
                 {page === 1 && <><img className="old-skyline" src={classifiedNycStreet} alt="" draggable={false} /><PixelUnicorn /><PixelDragon flipped /></>}
-                {page === 2 && <><div className="archive-species unicorn-record"><span>01 / UNICORN</span><PixelUnicorn /><b>{locale === "ko" ? "버려진 고층 건물" : "ABANDONED TOWERS"}</b></div><div className="archive-species dragon-record"><span>02 / DRAGON</span><PixelDragon flipped /><b>{locale === "ko" ? "폐쇄된 지하철 터널" : "SEALED SUBWAY TUNNELS"}</b></div></>}
-                {page === 3 && <><div className="rift-location">MANHATTAN / BELOW STREET LEVEL</div><div className="rift-platform"><ManholePortal active /></div><div className="rift-caption"><span>PORTAL 001</span><b>{locale === "ko" ? "봉인 해제 · 진입 가능" : "SEAL BROKEN · ENTRY OPEN"}</b></div></>}
+                {page === 2 && <><div className="archive-species unicorn-record"><span>01 / UNICORN</span><PixelUnicorn /><b>{locale === "ko" ? "도시 속 숨은 이웃" : "NEIGHBORS IN HIDING"}</b></div><div className="archive-species dragon-record"><span>02 / DRAGON</span><PixelDragon flipped /><b>{locale === "ko" ? "갑작스러운 출몰" : "UNEXPECTED SIGHTINGS"}</b></div></>}
+                {page > 2 && page < story.length && archiveEvidence[page - 3].map(photo => <figure key={photo.src}><img src={photo.src} alt={photo[locale]} draggable={false} /><figcaption>{photo[locale]}</figcaption></figure>)}
+                {page === story.length && <><div className="rift-location">MANHATTAN / BELOW STREET LEVEL</div><div className="rift-platform"><ManholePortal active /></div><div className="rift-caption"><span>PORTAL 001</span><b>{locale === "ko" ? "봉인 해제 · 진입 가능" : "SEAL BROKEN · ENTRY OPEN"}</b></div></>}
               </div>
               <p className="file-body"><ArchiveText text={story[page - 1].body} delay={2100} instant={preview} /></p>
-              <div className="file-footer"><span>PAGE 0{page} / 03</span><strong>{story[page - 1].stamp}</strong></div>
+              <div className="file-footer"><span>PAGE {String(page).padStart(2, "0")} / {String(story.length).padStart(2, "0")}</span><strong>{story[page - 1].stamp}</strong></div>
             </article>);
 
   return (
@@ -287,17 +294,17 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
         <div className="onboarding-tools"><LanguageToggle locale={locale} onChange={setLocale} /></div>
       </header>
       <section className="onboarding-content">
-        {step < 4 ? (
+        {step < factionStep ? (
           <div className={`classified-scene archive-reader ${isTurning ? `page-turning ${turnDirection === "back" ? "page-turning-back" : ""}` : ""}`}>
             {step > 0 && <div className="archive-status"><span>NYC OCCULT DEFENSE BUREAU</span><b>SECURITY LEVEL // 08</b></div>}
             <div className="file-stack">
             <div className={`book-sheet current-sheet ${isTurning && turnDirection === "next" ? "sheet-outgoing" : ""}`}>{renderFile(step)}</div>
-            {turnTarget !== null && turnTarget < 4 && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget)}</div>}
+            {turnTarget !== null && turnTarget < factionStep && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget)}</div>}
             <div className="page-underlay" aria-hidden="true" />
             </div>
             <div className="story-controls">
               {step > 0 ? <PixelButton secondary onClick={turnBack} disabled={isTurning}><span>◀</span> {locale === "ko" ? "이전 문서" : "PREVIOUS FILE"}</PixelButton> : <span className="story-nav-spacer" />}
-              <div className="onboarding-next"><PixelButton onClick={turnPage} disabled={isTurning}>{step === 0 ? (locale === "ko" ? "문서 열기" : "OPEN REPORT") : step === 3 ? (locale === "ko" ? "진영 파일 열기" : "OPEN FACTION FILES") : (locale === "ko" ? "다음 문서" : "NEXT FILE")} <span>▶</span></PixelButton><button className="skip-briefing" disabled={isTurning} onClick={() => setStep(4)}>{locale === "ko" ? "스토리 건너뛰기" : "Skip story"}</button></div>
+              <div className="onboarding-next"><PixelButton onClick={turnPage} disabled={isTurning}>{step === 0 ? (locale === "ko" ? "문서 열기" : "OPEN REPORT") : step === story.length ? (locale === "ko" ? "진영 파일 열기" : "OPEN FACTION FILES") : (locale === "ko" ? "다음 문서" : "NEXT FILE")} <span>▶</span></PixelButton><button className="skip-briefing" disabled={isTurning} onClick={() => setStep(factionStep)}>{locale === "ko" ? "스토리 건너뛰기" : "Skip story"}</button></div>
             </div>
           </div>
         ) : <><div className="game-title">
@@ -306,9 +313,9 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
           <p>드래곤 <span>VS</span> 유니콘</p>
           <small>{t.tagline}</small>
         </div>
-        {step === 4 ? (
+        {step === factionStep ? (
           <div className="choose-section">
-            <div className="section-heading"><span>04</span><div><h2>{t.choose}</h2><p>{t.chooseBody}</p></div></div>
+            <div className="section-heading"><span>{String(factionStep).padStart(2, "0")}</span><div><h2>{t.choose}</h2><p>{t.chooseBody}</p></div></div>
             <div className="team-grid">
               <TeamCard team="dragon" locale={locale} selected={team === "dragon"} onClick={() => setTeam("dragon")} />
               <div className="versus-badge" aria-label="versus">
@@ -318,20 +325,20 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
               </div>
               <TeamCard team="unicorn" locale={locale} selected={team === "unicorn"} onClick={() => setTeam("unicorn")} />
             </div>
-            <div className="onboarding-next faction-next"><PixelButton onClick={() => setStep(5)} disabled={!team}>{t.continue} <span>▶</span></PixelButton><button className="skip-briefing" disabled={!team} onClick={()=>team&&onComplete(team)}>{locale === "ko" ? "설명 건너뛰고 시작" : "Skip briefing & play"}</button></div>
+            <div className="onboarding-next faction-next"><PixelButton onClick={() => setStep(tutorialStep)} disabled={!team}>{t.continue} <span>▶</span></PixelButton><button className="skip-briefing" disabled={!team} onClick={()=>team&&onComplete(team)}>{locale === "ko" ? "설명 건너뛰고 시작" : "Skip briefing & play"}</button></div>
           </div>
         ) : team && (
           <StoryboardTutorial
             locale={locale}
             team={team}
-            scene={step - 5}
+            scene={step - tutorialStep}
             onSkip={() => onComplete(team)}
-            onPrevious={() => setStep((current) => Math.max(4, current - 1))}
-            onNext={() => step < 5 + storyboardText[locale].length - 1 ? setStep((current) => current + 1) : onComplete(team)}
+            onPrevious={() => setStep((current) => Math.max(factionStep, current - 1))}
+            onNext={() => step < tutorialStep + storyboardText[locale].length - 1 ? setStep((current) => current + 1) : onComplete(team)}
           />
         )}</>}
       </section>
-      {step < 5 && <div className="step-indicator">{Array.from({ length: 5 }).map((_, index) => <span key={index} className={index <= step ? "active" : ""} />)}</div>}
+      {step < tutorialStep && <div className="step-indicator">{Array.from({ length: tutorialStep }).map((_, index) => <span key={index} className={index <= step ? "active" : ""} />)}</div>}
     </main>
   );
 }
@@ -384,7 +391,7 @@ function ArcadeBriefing({ index, locale, team }: { index: number; locale: Locale
   const goals = locale === "ko" ? ["끝없이 생존", "연속 라운드", "10쌍 최단시간", "무한 웨이브"] : ["SURVIVE & GROW", "ENDLESS BRICKS", "MATCH 10 PAIRS", "ENDLESS WAVES"];
   const controls = ["↑ ↓ ← → / WASD", "← → / DRAG + SPACE", "CLICK / TAP", "← → + SPACE"];
   return <div className="arcade-briefing"><div className="arcade-briefing-header"><span>ARCADE / 0{index + 3}</span><b>{goals[index]}</b></div>
-    {index === 2 ? <div className="brief-memory-board" style={{backgroundImage: `linear-gradient(#08162450, #08162450), url("${landmarkBackgrounds[4]}")`}}>{Array.from({length:20},(_,i)=><div className={i===1||i===6?"preview-rune paired":"preview-rune"} key={i}><img src={memoryCards[i%10]} alt="" /><small>{String(i+1).padStart(2,"0")}</small></div>)}</div> : <GamePreview team={team} mode={(["snake","breakout","memory","invader"] as const)[index]} background={landmarkBackgrounds[[0,2,4,5][index]]} label={goals[index]} />}<div className="arcade-briefing-controls"><span>{locale === "ko" ? "조작 방법" : "CONTROLS"}</span><b>{controls[index]}</b></div><p>{locale === "ko" ? "모바일에서는 화면의 조작 버튼을 사용하세요" : "ON MOBILE, USE THE ON-SCREEN CONTROLS"}</p></div>;
+    {index === 2 ? <div className="brief-memory-board" style={{backgroundImage: `linear-gradient(#08162450, #08162450), url("${landmarkBackgrounds[4]}")`}}>{Array.from({length:20},(_,i)=><div className={i===1||i===11?"preview-rune paired":"preview-rune"} key={i}><img src={memoryCards[i%10]} alt="" /><small>{String(i+1).padStart(2,"0")}</small></div>)}</div> : <GamePreview team={team} mode={(["snake","breakout","memory","invader"] as const)[index]} background={landmarkBackgrounds[[0,2,4,5][index]]} label={goals[index]} />}<div className="arcade-briefing-controls"><span>{locale === "ko" ? "조작 방법" : "CONTROLS"}</span><b>{controls[index]}</b></div><p>{locale === "ko" ? "모바일에서는 화면의 조작 버튼을 사용하세요" : "ON MOBILE, USE THE ON-SCREEN CONTROLS"}</p></div>;
 }
 
 function StoryboardTutorial({ locale, team, scene, onPrevious, onNext, onSkip }: { locale: Locale; team: Team; scene: number; onPrevious: () => void; onNext: () => void; onSkip: () => void }) {
@@ -454,8 +461,16 @@ export default function App() {
   const roundBusy = useRef(false);
   const roundTimer = useRef<number | undefined>(undefined);
   const [roundPending, setRoundPending] = useState(false);
+  const [roundSerial, setRoundSerial] = useState(0);
   useEffect(() => () => window.clearTimeout(roundTimer.current), []);
   const [inBattle, setInBattle] = useState(false);
+  useEffect(() => {
+    if (!inBattle || !team) {
+      window.clearTimeout(roundTimer.current);
+      roundBusy.current = false;
+      setRoundPending(false);
+    }
+  }, [inBattle, team]);
   const [gameMode, setGameMode] = useState<GameMode>("rps");
   const owners = zones.map(zone=>boards[zone.id]?.[0]?.team??null);
   const scores = {dragon:Math.round(owners.filter(x=>x==="dragon").length/8*100),unicorn:Math.round(owners.filter(x=>x==="unicorn").length/8*100)};
@@ -508,11 +523,16 @@ export default function App() {
   const play = (move: Rps) => {
     if (enemyWins > 0 || pendingRecord !== null || roundBusy.current) return;
     roundBusy.current = true; setRoundPending(true);
-    roundTimer.current = window.setTimeout(() => { roundBusy.current = false; setRoundPending(false); }, 650);
+    setRoundSerial(value => value + 1);
     const moves: Rps[] = ["rock", "paper", "scissors"];
     const rival = moves[Math.floor(Math.random() * moves.length)];
     const didWin = rpsResult(move, rival) === "win";
     const didLose = rpsResult(move, rival) === "lose";
+    roundTimer.current = window.setTimeout(() => {
+      roundBusy.current = false;
+      setRoundPending(false);
+      if (didLose && playerWins > 0) setPendingRecord(playerWins);
+    }, ROUND_DURATION);
     setPlayerMove(move);
     setEnemyMove(rival);
     setResult(didWin ? "win" : didLose ? "lose" : "draw");
@@ -522,7 +542,6 @@ export default function App() {
 
     } else if (didLose) {
       setEnemyWins(1);
-      if(playerWins>0)setPendingRecord(playerWins);
     }
   };
 
@@ -670,12 +689,9 @@ export default function App() {
                 <span>{result ? t[result] : t.pick}</span>
                 <div className="unicorn-move">{unicornMove ? <RpsIcon type={unicornMove} /> : <b>?</b>}</div>
               </div>
-              <div className="fighters">
-                <div className={team === "dragon" ? "player fighter" : "enemy fighter"}><PixelDragon level={team === "dragon" ? guardianLevel : 3} /></div>
-                <div className={team === "unicorn" ? "player fighter" : "enemy fighter"}><PixelUnicorn flipped level={team === "unicorn" ? guardianLevel : 3} /></div>
-              </div>
+              <RpsCombat team={team} level={guardianLevel} result={result} active={roundPending} round={roundSerial} streak={playerWins} locale={locale} dragon={<PixelDragon level={team === "dragon" ? guardianLevel : 3} />} unicorn={<PixelUnicorn flipped level={team === "unicorn" ? guardianLevel : 3} />} />
               <div className="battle-ground"><div className="duel-portal"><ManholePortal active /><div className="duel-portal-caption"><span>NYC / TIMES SQUARE</span><b>{locale === "ko" ? "포탈 쟁탈전" : "PORTAL CONTEST"}</b><i aria-hidden="true" /></div></div></div>
-              {enemyWins > 0 && <div className="victory-banner"><span>STREAK COMPLETE</span><h2>{playerWins} {locale === "ko" ? "연승" : "WIN STREAK"}</h2><p>{locale === "ko" ? "무승부는 연승 유지 · 패배하면 기록 종료":"DRAWS KEEP YOUR STREAK · A LOSS ENDS YOUR RUN"}</p>{playerWins>0&&<PixelButton onClick={()=>setPendingRecord(playerWins)}>{locale === "ko" ? "기록 등록" : "REGISTER RECORD"}</PixelButton>}<PixelButton secondary onClick={restart}>{t.reset}</PixelButton></div>}
+              {enemyWins > 0 && !roundPending && <div className="victory-banner"><span>STREAK COMPLETE</span><h2>{playerWins} {locale === "ko" ? "연승" : "WIN STREAK"}</h2><p>{locale === "ko" ? "무승부는 연승 유지 · 패배하면 기록 종료":"DRAWS KEEP YOUR STREAK · A LOSS ENDS YOUR RUN"}</p>{playerWins>0&&<PixelButton onClick={()=>setPendingRecord(playerWins)}>{locale === "ko" ? "기록 등록" : "REGISTER RECORD"}</PixelButton>}<PixelButton secondary onClick={restart}>{t.reset}</PixelButton></div>}
             </div>
           )}
         </section>

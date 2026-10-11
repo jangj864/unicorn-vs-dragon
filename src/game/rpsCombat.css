@@ -1,0 +1,26 @@
+.rps-combat { position:absolute; inset:0; pointer-events:none; z-index:4; overflow:hidden; }
+.battle-arena .rps-combat .fighters.combat-fighters .combat-fighter { position:relative; animation:none; --toward:45px; --away:-24px; }
+.battle-arena .rps-combat .fighters.combat-fighters .side-unicorn { --toward:-45px; --away:24px; }
+.combat-attack { position:absolute; inset:0; width:100%; height:100%; object-fit:contain; image-rendering:pixelated; filter:drop-shadow(0 0 15px #ff9e42); }
+.side-unicorn .combat-attack { transform:scaleX(-1); filter:drop-shadow(0 0 15px #65dfff); }
+.battle-arena .rps-combat .fighters.combat-fighters .is-attacking { animation:combat-strike 1.6s both; z-index:2; }
+.battle-arena .rps-combat .fighters.combat-fighters .is-hit { animation:combat-recoil 1.6s both; }
+.battle-arena .rps-combat .fighters.combat-fighters .is-guarding { animation:combat-guard 1.6s both; }
+.combat-impact { position:absolute; left:35%; top:32%; color:#ffe09a; font-size:100px; text-shadow:0 0 20px #ff9945; animation:combat-impact 1.6s both; }
+.outcome-draw .combat-impact { color:#83e4ef; }
+.combat-announcement { position:absolute; top:42%; left:10%; right:10%; text-align:center; z-index:5; animation:combat-title 1.6s both; text-shadow:3px 3px #071321; }
+.combat-announcement b { display:block; color:#ffe38a; font:clamp(16px,3vw,32px) var(--arcade); }
+.combat-announcement small { display:block; margin-top:12px; color:#fff8e4; font:12px var(--arcade); }
+.outcome-lose .combat-announcement b { color:#ff938b; }
+.outcome-draw .combat-announcement b { color:#9cf3ff; }
+.combat-particles { position:absolute; inset:0; overflow:hidden; }
+.combat-particles i { position:absolute; left:var(--x); top:48%; width:7px; height:7px; background:#ffe194; box-shadow:0 0 8px #ffba50; animation:combat-sparks 1s calc(.45s + var(--i)*.015s) both; }
+.outcome-lose .combat-particles i { background:#ff785e; }
+.outcome-draw .combat-particles i { background:#83e4ef; }
+@keyframes combat-strike { 0%,12% { transform:translateX(0) scale(1); } 25% { transform:translateX(var(--away)) scale(.96); } 38%,52% { transform:translateX(var(--toward)) scale(1.1); } 75%,100% { transform:translateX(0) scale(1); } }
+@keyframes combat-recoil { 0%,34%,100% { transform:translateX(0); filter:none; } 39%,49% { transform:translateX(var(--away)); filter:brightness(2) sepia(.6); } 44%,55% { transform:translateX(0); filter:none; } 65% { transform:translateX(var(--away)); } }
+@keyframes combat-guard { 0%,100% { transform:scale(1); } 35%,55% { transform:scale(.94); filter:drop-shadow(0 0 16px #8df4ff); } }
+@keyframes combat-impact { 0%,32% { opacity:0; transform:scale(.1); } 42% { opacity:1; transform:scale(1.5) rotate(25deg); } 67%,100% { opacity:0; transform:scale(2); } }
+@keyframes combat-title { 0%,43% { opacity:0; transform:translateY(16px) scale(.7); } 57%,88% { opacity:1; transform:translateY(0) scale(1); } 100% { opacity:0; transform:translateY(-12px); } }
+@keyframes combat-sparks { 0% { opacity:0; transform:translate(0,0) rotate(0); } 20% { opacity:1; } 100% { opacity:0; transform:translate(var(--drift),-150px) rotate(210deg); } }
+@media(prefers-reduced-motion:reduce) { .rps-combat *, .battle-arena .rps-combat .fighters.combat-fighters .combat-fighter { animation:none!important; } .combat-impact,.combat-particles { display:none; } }

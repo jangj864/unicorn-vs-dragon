@@ -13,7 +13,7 @@ export default function GamePreview({ mode, background, label, team = "unicorn" 
     let disposed = false;
     const image = new Image();
     const hero = new Image();
-    const game = createGame(mode);
+    const game = createGame(mode, Math.random, true);
     if (mode === "snake") { game.snake = [{x:10,y:5},{x:9,y:5},{x:8,y:5},{x:8,y:6},{x:8,y:7},{x:7,y:7},{x:6,y:7}]; game.food = {x:13,y:4}; }
     if (mode === "breakout") { game.ball.docked = false; game.ball.x = 260; game.ball.y = 245; }
     let invaderArt: InvaderArt | undefined;

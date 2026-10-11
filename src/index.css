@@ -709,7 +709,7 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .evidence-0 .unicorn { bottom: 0; }
 .evidence-0 .dragon { bottom: 4px; }
 .evidence::after {
-  content: "EVIDENCE // 2091";
+  content: "EVIDENCE // 2026";
   position: absolute;
   left: 10px;
   bottom: 7px;
@@ -1287,7 +1287,7 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .archive-reader .file-footer { grid-column: 1 / -1; grid-row: 6; margin-top: 22px; padding-top: 16px; }
 .archive-reader .file-footer strong { transform: none; border-width: 1px; padding: 8px 10px; color: #7f4735; }
 .archive-reader .evidence { grid-column: 1; grid-row: 2 / 6; margin: 0; min-height: 240px; border: 1px solid #626959; outline: 5px solid #eee8d3; box-shadow: none; background: #131e23; animation: none; }
-.archive-reader .evidence::after { content: 'NYC ARCHIVE / 2091'; left: 12px; bottom: 10px; color: #e7dcc3; font-size: 6px; }
+.archive-reader .evidence::after { content: 'NYC ARCHIVE / 2026'; left: 12px; bottom: 10px; color: #e7dcc3; font-size: 6px; }
 .archive-reader .evidence-0 .old-skyline { opacity: .8; object-position: center bottom; }
 .archive-reader .evidence .pixel-creature { width: 43%; height: 62%; max-height: none; bottom: 6%; animation: none; filter: drop-shadow(3px 5px 0 #080e16a0); }
 .archive-reader .evidence .unicorn { left: 3%; }
@@ -1565,3 +1565,13 @@ img.loot-sprite { filter: none; }
 .archive-reader .current-sheet .evidence,
 .archive-reader .current-sheet .file-footer strong { animation: none; }
 .archive-reader .file-stack::after { display: none; }
+/* Separate polaroid prints mounted on the investigation paper. */
+.archive-reader .evidence.archive-photo-pair { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; padding: 20px 16px; background: transparent; border: 0; outline: 0; overflow: visible; }
+.archive-reader .archive-photo-pair::before,.archive-reader .archive-photo-pair::after { display: none; }
+.archive-photo-pair figure { position: relative; display: grid; grid-template-rows: minmax(0,1fr) auto; min-width: 0; min-height: 0; margin: 0; padding: 10px 10px 0; background: #fffefa; border: 1px solid #e7e3da; box-shadow: 2px 5px 9px #302b2433; transform: rotate(-2deg); }
+.archive-photo-pair figure:nth-child(even) { transform: rotate(2deg); }
+.archive-photo-pair figure::before { content: ''; position: absolute; z-index: 1; width: 54px; height: 21px; left: calc(50% - 27px); top: -11px; background: #eae0b9b8; border: 1px solid #c4b98c55; transform: rotate(-5deg); }
+.archive-photo-pair img { width: 100%; height: 100%; min-height: 0; object-fit: contain; object-position: center; image-rendering: pixelated; background: #fff; border: 1px solid #eeeae3; }
+.archive-photo-pair figcaption { display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 12px 4px 16px; background: #fffefa; color: #50545b; text-align: center; text-wrap: balance; font-size: 11px; line-height: 1.5; }
+.archive-photo-pair figure:only-child { grid-column: 1 / -1; width: 78%; justify-self: center; }
+@media (max-width:700px) { .archive-reader .evidence.archive-photo-pair { height: clamp(270px,42svh,380px); padding: 16px 10px; gap: 18px; } .archive-photo-pair figure { padding: 7px 7px 0; } .archive-photo-pair figcaption { font-size: 10px; min-height: 56px; padding: 10px 2px 14px; } }@media (min-width:701px) { .archive-reader .classified-file { min-height: 560px; } }
