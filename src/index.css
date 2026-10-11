@@ -1512,8 +1512,13 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .archive-type { position: relative; }
 .type-unrevealed { visibility: hidden; }
 .archive-accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-.type-reveal { position: absolute; right: 0; bottom: -18px; border: 0; padding: 2px 5px; background: #d9d2b9; color: #686347; font: 11px/1 var(--pixel); cursor: pointer; }
-.type-reveal:focus-visible { outline: 2px solid #705226; }
+.archive-reader .file-body-content { grid-column: 2; grid-row: 5; min-width: 0; }
+.archive-reading-controls { display: flex; justify-content: flex-start; margin: 12px 0 0; }
+.archive-reveal-all { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 16px; border: 1px solid #98957e; background: #d9d2b9; color: #514c35; font: 11px/1.4 var(--pixel); cursor: pointer; }
+.archive-reveal-all > span { font-size: 22px; line-height: 1; }
+.archive-reveal-all:hover:not(:disabled) { background: #e8e1c9; }
+.archive-reveal-all:disabled { opacity: .55; cursor: default; }
+.archive-reveal-all:focus-visible { outline: 2px solid #705226; outline-offset: 3px; }
 .archive-reader .current-sheet .evidence { animation: archive-develop 1.1s steps(12,end) both; }
 .archive-reader .evidence::before { content: ''; position: absolute; inset: 0; z-index: 7; pointer-events: none; background: repeating-linear-gradient(0deg,transparent 0 3px,#09151024 3px 4px); opacity: .4; }
 .archive-reader .current-sheet .file-footer strong { animation: archive-stamp 600ms 450ms cubic-bezier(.2,.7,.2,1) both; }
@@ -1566,12 +1571,12 @@ img.loot-sprite { filter: none; }
 .archive-reader .current-sheet .file-footer strong { animation: none; }
 .archive-reader .file-stack::after { display: none; }
 /* Separate polaroid prints mounted on the investigation paper. */
-.archive-reader .evidence.archive-photo-pair { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; padding: 20px 16px; background: transparent; border: 0; outline: 0; overflow: visible; }
+.archive-reader .evidence.archive-photo-pair { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 24px; align-items: start; align-self: center; height: auto; min-height: 0; padding: 20px 16px; background: transparent; border: 0; outline: 0; overflow: visible; }
 .archive-reader .archive-photo-pair::before,.archive-reader .archive-photo-pair::after { display: none; }
-.archive-photo-pair figure { position: relative; display: grid; grid-template-rows: minmax(0,1fr) auto; min-width: 0; min-height: 0; margin: 0; padding: 10px 10px 0; background: #fffefa; border: 1px solid #e7e3da; box-shadow: 2px 5px 9px #302b2433; transform: rotate(-2deg); }
+.archive-photo-pair figure { position: relative; display: grid; grid-template-rows: auto auto; min-width: 0; min-height: 0; margin: 0; padding: 10px 10px 0; background: #fffefa; border: 1px solid #e7e3da; box-shadow: 2px 5px 9px #302b2433; transform: rotate(-2deg); }
 .archive-photo-pair figure:nth-child(even) { transform: rotate(2deg); }
 .archive-photo-pair figure::before { content: ''; position: absolute; z-index: 1; width: 54px; height: 21px; left: calc(50% - 27px); top: -11px; background: #eae0b9b8; border: 1px solid #c4b98c55; transform: rotate(-5deg); }
-.archive-photo-pair img { width: 100%; height: 100%; min-height: 0; object-fit: contain; object-position: center; image-rendering: pixelated; background: #fff; border: 1px solid #eeeae3; }
+.archive-photo-pair img { display: block; width: 100%; height: auto; min-height: 0; object-fit: contain; object-position: center; image-rendering: pixelated; background: #e4e3df; border: 1px solid #d7d6d1; }
 .archive-photo-pair figcaption { display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 12px 4px 16px; background: #fffefa; color: #50545b; text-align: center; text-wrap: balance; font-size: 11px; line-height: 1.5; }
 .archive-photo-pair figure:only-child { grid-column: 1 / -1; width: 78%; justify-self: center; }
-@media (max-width:700px) { .archive-reader .evidence.archive-photo-pair { height: clamp(270px,42svh,380px); padding: 16px 10px; gap: 18px; } .archive-photo-pair figure { padding: 7px 7px 0; } .archive-photo-pair figcaption { font-size: 10px; min-height: 56px; padding: 10px 2px 14px; } }@media (min-width:701px) { .archive-reader .classified-file { min-height: 560px; } }
+@media (max-width:700px) { .archive-reader .evidence.archive-photo-pair { height: auto; min-height: 0; padding: 16px 10px; gap: 18px; } .archive-photo-pair figure { padding: 7px 7px 0; } .archive-photo-pair figcaption { font-size: 10px; min-height: 56px; padding: 10px 2px 14px; } }@media (min-width:701px) { .archive-reader .classified-file { min-height: 560px; } }

@@ -225,6 +225,8 @@ function TeamCard({ team, locale, selected, onClick }: { team: Team; locale: Loc
 
 function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLocale: (value: Locale) => void; onComplete: (team: Team) => void }) {
   const [step, setStep] = useState(0);
+  const [revealedPage, setRevealedPage] = useState<string | null>(null);
+  const pageKey = `${step}-${locale}`;
   const [team, setTeam] = useState<Team | null>(null);
   const [isTurning, setIsTurning] = useState(false);
   const [turnTarget, setTurnTarget] = useState<number | null>(null);
@@ -263,24 +265,29 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
   const turnPage = () => navigateFile(step + 1);
   const turnBack = () => navigateFile(step - 1);
 
+  const revealControl = (page: number) => page === step ? (<div className="archive-reading-controls"><button type="button" className="archive-reveal-all" disabled={isTurning || revealedPage === pageKey} onClick={() => setRevealedPage(pageKey)}><span aria-hidden="true">▸▸</span>{revealedPage === pageKey ? (locale === "ko" ? "전체 표시됨" : "ALL TEXT SHOWN") : (locale === "ko" ? "글 전체 보기" : "SHOW ALL TEXT")}</button></div>) : null;
+
   const renderFile = (page: number, preview = false) => (page === 0 ? (
               <article className="classified-cover" key="cover">
-                <div className="cover-identity"><span>NYC / OCCULT DEFENSE BUREAU</span><h1><ArchiveText text={locale === "ko" ? "기밀 조사 보고서" : "CLASSIFIED REPORT"} instant={preview} /></h1><p>{locale === "ko" ? "맨해튼 비인간 활동 기록" : "MANHATTAN NON-HUMAN ACTIVITY"}</p><div className="cover-rule" /><b>CASE FILE / 00–X</b><small>AUTHORIZED PERSONNEL ONLY<br />ARCHIVE RELEASE / 2026</small></div><img src={classifiedCover} alt={locale === "ko" ? "기밀 조사 보고서 표지" : "Classified investigation report cover"} draggable={false} />
+                <div className="cover-identity"><span>NYC / OCCULT DEFENSE BUREAU</span><h1><ArchiveText text={locale === "ko" ? "기밀 조사 보고서" : "CLASSIFIED REPORT"} instant={preview || revealedPage === `${page}-${locale}`} /></h1><p>{locale === "ko" ? "맨해튼 비인간 활동 기록" : "MANHATTAN NON-HUMAN ACTIVITY"}</p>{revealControl(page)}<div className="cover-rule" /><b>CASE FILE / 00–X</b><small>AUTHORIZED PERSONNEL ONLY<br />ARCHIVE RELEASE / 2026</small></div><img src={classifiedCover} alt={locale === "ko" ? "기밀 조사 보고서 표지" : "Classified investigation report cover"} draggable={false} />
               </article>
             ) : <article className="classified-file" key={page}>
               <div className="file-edge" />
               <div className="file-meta"><span>{story[page - 1].code}</span><span>09.28.2026</span></div>
               <div className="redaction">██████ █████ ███</div>
               <p className="file-kicker">NYC // NON-HUMAN ACTIVITY</p>
-              <h1><ArchiveText text={story[page - 1].title} instant={preview} /></h1>
-              <p className="file-lead"><ArchiveText text={story[page - 1].lead} delay={650} instant={preview} /></p>
+              <h1><ArchiveText text={story[page - 1].title} instant={preview || revealedPage === `${page}-${locale}`} /></h1>
+              <p className="file-lead"><ArchiveText text={story[page - 1].lead} delay={650} instant={preview || revealedPage === `${page}-${locale}`} /></p>
               <div className={`evidence ${page > 2 && page < story.length ? "archive-photo-pair" : `evidence-${page === story.length ? 2 : page - 1}`}`}>
                 {page === 1 && <><img className="old-skyline" src={classifiedNycStreet} alt="" draggable={false} /><PixelUnicorn /><PixelDragon flipped /></>}
                 {page === 2 && <><div className="archive-species unicorn-record"><span>01 / UNICORN</span><PixelUnicorn /><b>{locale === "ko" ? "도시 속 숨은 이웃" : "NEIGHBORS IN HIDING"}</b></div><div className="archive-species dragon-record"><span>02 / DRAGON</span><PixelDragon flipped /><b>{locale === "ko" ? "갑작스러운 출몰" : "UNEXPECTED SIGHTINGS"}</b></div></>}
                 {page > 2 && page < story.length && archiveEvidence[page - 3].map(photo => <figure key={photo.src}><img src={photo.src} alt={photo[locale]} draggable={false} /><figcaption>{photo[locale]}</figcaption></figure>)}
                 {page === story.length && <><div className="rift-location">MANHATTAN / BELOW STREET LEVEL</div><div className="rift-platform"><ManholePortal active /></div><div className="rift-caption"><span>PORTAL 001</span><b>{locale === "ko" ? "봉인 해제 · 진입 가능" : "SEAL BROKEN · ENTRY OPEN"}</b></div></>}
               </div>
-              <p className="file-body"><ArchiveText text={story[page - 1].body} delay={2100} instant={preview} /></p>
+              <div className="file-body-content">
+              <p className="file-body"><ArchiveText text={story[page - 1].body} delay={2100} instant={preview || revealedPage === `${page}-${locale}`} /></p>
+                {revealControl(page)}
+              </div>
               <div className="file-footer"><span>PAGE {String(page).padStart(2, "0")} / {String(story.length).padStart(2, "0")}</span><strong>{story[page - 1].stamp}</strong></div>
             </article>);
 
