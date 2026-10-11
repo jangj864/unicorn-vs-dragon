@@ -9,6 +9,13 @@ A Vite development server is **already running** on `$PORT` (default 8443). You 
 - Preview URL: The user can access the running app through the preview panel
 - Hot reload: Changes to source files are reflected immediately
 
+### Local Mac checkout
+
+- This checkout also runs outside Figma Make. Check port 8443 before starting a server; if none is running, use `pnpm dev`.
+- Node 22, pnpm 10.34.3, Git LFS, and GitHub CLI are installed in `/Users/ddoazoo/.local/bin`. If the Codex command environment does not load the shell profile, prepend that directory to `PATH` for commands.
+- `.env.local` contains ignored, browser-safe ranking configuration. Do not print credentials or commit local environment files.
+- Pushing to `main` triggers `.github/workflows/deploy.yml`, which tests, builds, and publishes to GitHub Pages. Use explicit file paths when staging changes.
+
 ## Project Structure
 
 This is the canonical project structure. Start with task-relevant files below. Only follow imports or inspect other files when required, when a documented path is missing, or when the repository contradicts this guide.
