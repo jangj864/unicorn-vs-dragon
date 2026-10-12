@@ -1310,7 +1310,7 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .rift-caption { display: grid; gap: 10px; text-align: center; color: #e3c185; }
 .rift-caption span { font: 9px var(--arcade); }.rift-caption b { font-size: 13px; font-weight: 400; color: #e8e0cb; }
 .archive-reader .story-controls { margin-top: 18px; }
-@media (max-width: 700px) {
+@media (max-width: 760px) {
   .classified-scene.archive-reader { width: min(540px, calc(100% - 12px)); }
   .archive-reader .classified-file { display: flex; height: auto; min-height: min(690px, calc(100svh - 195px)); padding: 20px; gap: 0; }
   .archive-reader .file-meta { margin-bottom: 16px; padding-bottom: 12px; font-size: 6px; }
@@ -1367,7 +1367,7 @@ p, h1, h2, strong, small { text-wrap: pretty; }
   50% { box-shadow: inset -50px 0 75px #30291c44, 24px 14px 30px #0003; }
   100% { box-shadow: inset -90px 0 100px #30291c66, 4px 8px 10px #0001; }
 }
-@media (max-width:700px) {
+@media (max-width:760px) {
   .archive-reader .classified-cover { height: auto; min-height: min(690px, calc(100svh - 195px)); padding: 24px; gap: 16px; grid-template-columns: 1fr; grid-template-rows: auto minmax(180px, 1fr); }
   .cover-identity h1 { font-size: 27px; margin: 12px 0 4px; }
   .cover-identity p { font-size: 14px; margin: 4px 0; }
@@ -1379,10 +1379,10 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .archive-reader .book-sheet { backface-visibility: hidden; }
 .archive-reader .classified-cover { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
 .archive-reader .classified-cover > * { min-width: 0; }
-@media (max-width:700px) { .archive-reader .classified-cover { grid-template-columns: minmax(0,1fr); } }
+@media (max-width:760px) { .archive-reader .classified-cover { grid-template-columns: minmax(0,1fr); } }
 
 /* Cover artwork on the left, dossier identity on the right. */
-@media (min-width:701px) {
+@media (min-width:761px) {
   .archive-reader .classified-cover > img { grid-column: 1; grid-row: 1; border-left: 0; border-right: 1px solid #979077; padding-left: 0; padding-right: 24px; }
   .archive-reader .classified-cover > .cover-identity { grid-column: 2; grid-row: 1; }
 }
@@ -1392,7 +1392,7 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .arcade-briefing svg { width: 100%; max-height: 310px; display: block; border: 1px solid #344b5c; }
 .arcade-briefing-controls { display: grid; gap: 10px; padding-top: 18px; }.arcade-briefing-controls span { color: #879eaf; font-size: 12px; }.arcade-briefing-controls b { color: #eee5ce; font-size: 14px; font-weight: 400; }.arcade-briefing > p { margin: 14px 0 0; color: #879eaf; font-size: 11px; }
 .storyboard-progress { grid-template-columns: repeat(12,1fr); }
-@media (max-width:700px) { .arcade-briefing { padding: 12px; margin-block: 16px; }.arcade-briefing-header b { font-size: 18px; }.arcade-briefing svg { max-height: 220px; }.arcade-briefing-controls b { font-size: 12px; } }
+@media (max-width:760px) { .arcade-briefing { padding: 12px; margin-block: 16px; }.arcade-briefing-header b { font-size: 18px; }.arcade-briefing svg { max-height: 220px; }.arcade-briefing-controls b { font-size: 12px; } }
 
 /* Landmarks stay registered to the atlas at every viewport size. */
 .nyc-road-atlas { object-fit: fill; }
@@ -1579,4 +1579,73 @@ img.loot-sprite { filter: none; }
 .archive-photo-pair img { display: block; width: 100%; height: auto; min-height: 0; object-fit: contain; object-position: center; image-rendering: pixelated; background: #e4e3df; border: 1px solid #d7d6d1; }
 .archive-photo-pair figcaption { display: flex; align-items: center; justify-content: center; min-height: 60px; padding: 12px 4px 16px; background: #fffefa; color: #50545b; text-align: center; text-wrap: balance; font-size: 11px; line-height: 1.5; }
 .archive-photo-pair figure:only-child { grid-column: 1 / -1; width: 78%; justify-self: center; }
-@media (max-width:700px) { .archive-reader .evidence.archive-photo-pair { height: auto; min-height: 0; padding: 16px 10px; gap: 18px; } .archive-photo-pair figure { padding: 7px 7px 0; } .archive-photo-pair figcaption { font-size: 10px; min-height: 56px; padding: 10px 2px 14px; } }@media (min-width:701px) { .archive-reader .classified-file { min-height: 560px; } }
+@media (max-width:760px) { .archive-reader .evidence.archive-photo-pair { height: auto; min-height: 0; padding: 16px 10px; gap: 18px; } .archive-photo-pair figure { padding: 7px 7px 0; } .archive-photo-pair figcaption { font-size: 10px; min-height: 56px; padding: 10px 2px 14px; } }@media (min-width:761px) { .archive-reader .classified-file { min-height: 560px; } }
+
+
+/* Mobile layout refinements; the desktop composition stays unchanged. */
+.leaderboard-toggle { display: none; }
+@media (max-width: 760px) {
+  .onboarding .step-indicator { position: static; left: auto; bottom: auto; transform: none; width: 100%; justify-content: center; flex-wrap: wrap; gap: 6px; padding: 0 16px 20px; }
+  .onboarding .step-indicator span { width: 18px; }
+  .archive-reader .file-body-content { width: 100%; }
+  .archive-reader .archive-photo-pair { width: 100%; }
+  .archive-reader .story-controls .pixel-button { padding-inline: 8px; font-size: 10px; }
+  .story-controls .onboarding-next { min-width: 0; }
+  .skip-briefing, .language-toggle button { min-height: 44px; }
+  .leaderboard-toggle { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 8px 10px; border: 1px solid #526981; background: #13273c; color: #efd28c; font-size: 11px; cursor: pointer; }
+  .leaderboard:not(.is-expanded) > p, .leaderboard:not(.is-expanded) > ol { display: none; }
+  .leaderboard header { padding: 6px 10px; }
+  .leaderboard header > span { display: none; }
+  .leaderboard li { min-width: 0; }
+  .leaderboard li > div { min-width: 0; overflow-wrap: anywhere; }
+  .map-actions-rail .leaderboard { grid-column: 1 / -1; margin-top: 10px; }
+  .battle-actions-rail .leaderboard { margin-top: 12px; }
+  .game-layout:has(.arcade-cabinet) > .action-rail { position: static; max-height: none; margin: 0 10px 16px; width: auto; }
+  .game-layout:has(.arcade-cabinet) .action-rail > .rps-help, .game-layout:has(.arcade-cabinet) .action-rail > h2 { display: none; }
+  .game .map-controls { max-width: 132px; grid-template-columns: 44px minmax(0,1fr) 44px; }
+  .game .map-controls button { min-height: 44px; }
+  .game .map-legend { max-width: calc(100% - 166px); }
+  .game .zone-node::before { content: ""; position: absolute; width: 44px; height: 44px; left: -22px; top: -22px; }
+  .record-dialog { max-height: calc(100dvh - 32px); overflow-y: auto; padding: 20px; }
+  .record-dialog input { font-size: 16px; }
+}
+@media (max-width: 430px) {
+  .archive-reader .evidence.archive-photo-pair { grid-template-columns: minmax(0,1fr); gap: 24px; padding: 18px 14px; }
+  .archive-photo-pair figure:only-child { width: 100%; }
+  .archive-photo-pair figcaption { font-size: 12px; }
+  .archive-reader .file-footer { flex-wrap: wrap; gap: 10px; }
+}
+
+.mobile-map-hint { display: none; }
+@media (max-width:760px) {
+  .desktop-map-hint { display: none; }
+  .mobile-map-hint { display: inline; }
+  .game .map-drag-hint { position: static; margin: 8px 10px; text-align: center; }
+  .onboarding .skip-briefing { min-height: 44px; }
+}
+@media (max-width:760px) and (max-height:500px) {
+  .game .action-rail { position: static; margin: 10px; max-height: none; }
+  .game .pixel-map { height: 420px; min-height: 420px; padding-bottom: 0; }
+  .game .battle-arena { height: 440px; min-height: 440px; }
+}
+
+/* Compact sound controls shared by the story and game headers. */
+.sound-settings { position: relative; flex: none; }
+.sound-toggle { display: grid; place-items: center; width: 44px; height: 44px; border: 1px solid #435568; background: #102335; color: #eddbaf; cursor: pointer; }
+.sound-panel { position: absolute; top: calc(100% + 10px); right: 0; z-index: 100; width: 250px; max-width: calc(100vw - 32px); padding: 16px; display: grid; gap: 14px; background: #102335; border: 2px solid #8e8067; box-shadow: 5px 6px 0 #050b12; color: #efe7d0; }
+.sound-panel > strong { font-size: 14px; }
+.sound-panel > button { min-height: 44px; border: 1px solid #63728d; background: #1b3046; color: #eddbaf; font-size: 12px; cursor: pointer; }
+.sound-panel label { display: grid; grid-template-columns: 1fr auto; gap: 10px; font-size: 12px; }
+.sound-panel input { grid-column: 1 / -1; width: 100%; min-height: 28px; accent-color: #6bded8; cursor: pointer; }
+.sound-panel small { font-size: 10px; line-height: 1.5; color: #a0b2bd; }
+.sound-settings button:focus-visible, .sound-panel input:focus-visible { outline: 2px solid #f0c85c; outline-offset: 3px; }
+@media (max-width:760px) { .sound-panel { position: fixed; top: calc(70px + var(--mobile-safe-top)); right: 12px; max-height: calc(100dvh - 110px); overflow-y: auto; } .onboarding-tools { gap: 8px; } }
+
+/* Studio credit, creator signature, then the game title. */
+.boot-splash { width: 100%; min-width: 0; padding: 24px; text-align: center; animation: boot-reveal 2.2s ease both; }
+.boot-studio-logo { display: block; width: min(78vw,720px); height: auto; margin: auto; image-rendering: auto; }
+.boot-splash .boot-logo { padding: 0; animation: none; }
+.boot-creator > span { font: 8px/2 var(--arcade); letter-spacing: .18em; color: #b4a68b; }
+.boot-creator h1 { margin: 20px 0 0; font: clamp(22px,4.5vw,48px)/1.5 var(--pixel); color: #f1e7ce; }
+@media (max-width:760px) { .boot-screen > button { right: 16px; bottom: calc(20px + env(safe-area-inset-bottom)); min-height: 44px; } }
+@media (prefers-reduced-motion:reduce) { .boot-splash { animation: none; } }

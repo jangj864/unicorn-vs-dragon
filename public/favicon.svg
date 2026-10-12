@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Dragon VS Unicorn</title>
+  <rect width="64" height="64" rx="12" fill="#081321"/>
+  <g shape-rendering="crispEdges">
+    <path fill="#ef8070" d="M9 14h6v7h5v-5h5v11h5v7h-5v5H15v6H9V30H5V20h4z"/>
+    <path fill="#a94c43" d="M9 39h6v6h10v6H9z"/>
+    <path fill="#f0c85c" d="M12 25h5v4h-5zM25 40h5v7h-5z"/>
+    <path fill="#081321" d="M21 30h9v4h-9z"/>
+    <path fill="#6bded8" d="M44 18h5v8h6v5h4v9H49v11H37V34h-3v-8h10z"/>
+    <path fill="#e8f5ec" d="M44 24h5v6h6v5H44v9h-7V30h7z"/>
+    <path fill="#f0c85c" d="M50 8h5v10h-5v8h-5v-9h5z"/>
+    <path fill="#081321" d="M48 30h4v4h-4z"/>
+    <path fill="#377f89" d="M37 44h6v7h-6z"/>
+  </g>
+</svg>

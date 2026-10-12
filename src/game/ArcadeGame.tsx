@@ -1,3 +1,4 @@
+import { playSound, pauseMusic } from "./audio";
 import { loadBreakoutArt, drawBreakoutArt } from "./breakoutArt";
 import { drawRunnerCharacter, loadRunnerCharacter } from "./runnerCharacter";
 import { memoryCards } from "./memoryCards";
@@ -85,6 +86,7 @@ export default function ArcadeGame({team,mode,locale,guardian,guardianLevel=1,ba
   const [phase,setPhase]=useState<"ready"|"play"|"paused">("ready");
   const [,refresh]=useState(0);
   const claimed=useRef(false);
+  useEffect(() => { pauseMusic(phase === "paused"); return () => pauseMusic(false); }, [phase]);
   const g=game.current;
   const reset=()=>{game.current=createGame(mode, Math.random, true);input.current=blankInput();claimed.current=false;setPhase("ready");refresh(n=>n+1);};
   useEffect(()=>{
@@ -97,7 +99,15 @@ export default function ArcadeGame({team,mode,locale,guardian,guardianLevel=1,ba
     let frame=0,last=0,update=0;
     const loop=(now:number)=>{
       const dt=last?Math.min(.04,(now-last)/1000):0;last=now;
-      if(phase==="play")stepGame(game.current,input.current,dt);
+      if(phase==="play") {
+        const before = { score: game.current.score, lives: game.current.lives, status: game.current.status, matched: game.current.matched.length, height: game.current.height, coins: game.current.coins.length, bullets: game.current.bullets.filter(b => !b.enemy).length };
+        stepGame(game.current,input.current,dt);
+        if (game.current.status !== before.status) playSound(game.current.status === "won" ? "win" : "lose");
+        else if (game.current.lives < before.lives) playSound("hit");
+        else if ((mode !== "runner" && game.current.score > before.score) || game.current.matched.length > before.matched || game.current.coins.length < before.coins) playSound("collect");
+        if (mode === "runner" && before.height === 0 && game.current.height > 0) playSound("jump");
+        if (mode === "invader" && game.current.bullets.filter(b => !b.enemy).length > before.bullets) playSound("attack");
+      }
       const context=canvas.current?.getContext("2d");if(context)draw(context,game.current,image,hero,snakeSkin,runnerArt,invaderArt,runnerHero,breakoutArt);
       if(now-update>80){refresh(n=>n+1);update=now;}
       frame=requestAnimationFrame(loop);
@@ -138,7 +148,7 @@ export default function ArcadeGame({team,mode,locale,guardian,guardianLevel=1,ba
       "SPACE/↑ 점프. 속도가 올라가는 장애물을 피하며 오래 버티세요."
     ]:["ARROWS/WASD · No time limit. Collect shards; avoid walls and your tail.","ARROWS/DRAG · Auto launch. Clear bricks to continue the next wave.","Match all 10 pairs as fast as possible. Fastest completion takes #1.","ARROWS + SPACE · Clear invaders for the next, faster wave.","SPACE/↑ · Jump over obstacles. Speed increases as you survive."])[["snake","breakout","memory","invader","runner"].indexOf(mode)]}</p>
     <div className="cabinet-screen" style={{ backgroundImage: `linear-gradient(#07132055, #07132066), url("${background}")`, backgroundSize: "cover", backgroundPosition: "center bottom", backgroundRepeat: "no-repeat" }}>
-      {mode==="memory"?<div className="rune-board">{g.deck.map((symbol,i)=>{const shown=g.open.includes(i)||g.matched.includes(i);return <button key={i} className={g.matched.includes(i)?"rune matched":shown?"rune revealed":"rune"} aria-label={`${ko?"카드":"Card"} ${i+1}${shown?` · ${ko?"룬":"Rune"} ${symbol+1}`:""}`} aria-pressed={shown} disabled={phase!=="play"||g.status!=="running"||g.matched.includes(i)||g.open.length===2} onClick={()=>{flipCard(g,i);refresh(n=>n+1);}}>{shown?<img src={memoryCards[symbol]} alt="" draggable={false}/>:<><span>✦</span><small>{String(i+1).padStart(2,"0")}</small></>}</button>;})}</div>:<canvas ref={canvas} width={WIDTH} height={HEIGHT} aria-label={names[mode][lang]} onPointerDown={e=>{if(mode!=="breakout"&&mode!=="invader")return;e.currentTarget.setPointerCapture(e.pointerId);input.current.pointer=(e.clientX-e.currentTarget.getBoundingClientRect().left)/e.currentTarget.getBoundingClientRect().width*WIDTH;}} onPointerMove={e=>{if(e.buttons&&(mode==="breakout"||mode==="invader"))input.current.pointer=(e.clientX-e.currentTarget.getBoundingClientRect().left)/e.currentTarget.getBoundingClientRect().width*WIDTH;}}/>}
+      {mode==="memory"?<div className="rune-board">{g.deck.map((symbol,i)=>{const shown=g.open.includes(i)||g.matched.includes(i);return <button key={i} className={g.matched.includes(i)?"rune matched":shown?"rune revealed":"rune"} aria-label={`${ko?"카드":"Card"} ${i+1}${shown?` · ${ko?"룬":"Rune"} ${symbol+1}`:""}`} aria-pressed={shown} disabled={phase!=="play"||g.status!=="running"||g.matched.includes(i)||g.open.length===2} onClick={()=>{const matched=g.matched.length;flipCard(g,i);if(g.matched.length>matched)playSound("collect");refresh(n=>n+1);}}>{shown?<img src={memoryCards[symbol]} alt="" draggable={false}/>:<><span>✦</span><small>{String(i+1).padStart(2,"0")}</small></>}</button>;})}</div>:<canvas ref={canvas} width={WIDTH} height={HEIGHT} aria-label={names[mode][lang]} onPointerDown={e=>{if(mode!=="breakout"&&mode!=="invader")return;e.currentTarget.setPointerCapture(e.pointerId);input.current.pointer=(e.clientX-e.currentTarget.getBoundingClientRect().left)/e.currentTarget.getBoundingClientRect().width*WIDTH;}} onPointerMove={e=>{if(e.buttons&&(mode==="breakout"||mode==="invader"))input.current.pointer=(e.clientX-e.currentTarget.getBoundingClientRect().left)/e.currentTarget.getBoundingClientRect().width*WIDTH;}}/>}
       {(phase!=="play"||g.status!=="running")&&<div className="cabinet-overlay" role="status"><span className="pixel-label">{g.status!=="running"?"RUN COMPLETE":phase==="paused"?"PAUSED":(mode==="memory"?"TIME ATTACK":"SURVIVAL CHALLENGE")}</span><img src={guardian} alt=""/><h3>{g.status!=="running"?formatRecord(Math.floor(g.elapsed*1000),false):names[mode][lang]}</h3><p>{mode==="memory"?(ko?"최단 완료 시간이 1위 · 1위 진영이 포탈 점령":"FASTEST CLEAR TAKES #1 · #1 CONTROLS THE PORTAL"):(ko?"가장 오래 버틴 기록이 1위 · 1위 진영이 포탈 점령":"LONGEST SURVIVAL TAKES #1 · #1 CONTROLS THE PORTAL")}</p><button className="pixel-button" onClick={()=>{if(g.status!=="running"){if(!claimed.current){claimed.current=true;onFinish(Math.max(1,Math.floor(g.elapsed*1000)));}}else{input.current=blankInput();setPhase("play");}}}>{g.status!=="running"?(ko?"기록 등록":"REGISTER RECORD"):phase==="paused"?(ko?"계속하기":"RESUME"):(ko?"시작하기":"START")}</button>{g.status!=="running"&&<button className="cabinet-exit" onClick={reset}>{ko?"등록 없이 재도전":"RETRY WITHOUT SAVING"}</button>}<button className="cabinet-exit" onClick={onExit}>{ko?"지도로 돌아가기":"BACK TO MAP"}</button></div>}
 
     </div>

@@ -1,3 +1,5 @@
+import SoundSettings from "./game/SoundSettings";
+import { initializeAudio, setAudioScene, playSound } from "./game/audio";
 import { memoryCards } from "./game/memoryCards";
 import RpsCombat, { ROUND_DURATION } from "./game/RpsCombat";
 import unicornChest from "./imports/arcade-props/unicorn-chest.png";
@@ -250,6 +252,7 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
   useEffect(() => () => turnTimers.current.forEach(window.clearTimeout), []);
 
   const navigateFile = (target: number) => {
+    playSound("page");
     if (isTurning || target < 0 || target > factionStep) return;
     turnTimers.current.forEach(window.clearTimeout);
     const duration = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 900;
@@ -298,7 +301,7 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
         <button className="mini-logo home-logo" onClick={() => { turnTimers.current.forEach(window.clearTimeout); setIsTurning(false); setTurnTarget(null); setStep(0); setTeam(null); }} aria-label={locale === "ko" ? "메인 화면으로" : "Go to home"}>
           <span>DRAGON</span><i>VS</i><span>UNICORN</span>
         </button>
-        <div className="onboarding-tools"><LanguageToggle locale={locale} onChange={setLocale} /></div>
+        <div className="onboarding-tools"><SoundSettings ko={locale === "ko"} /><LanguageToggle locale={locale} onChange={setLocale} /></div>
       </header>
       <section className="onboarding-content">
         {step < factionStep ? (
@@ -523,12 +526,16 @@ export default function App() {
     return()=>{active=false;window.clearInterval(timer);window.removeEventListener("focus",refresh);};
   },[]);
   useEffect(()=>{try{localStorage.setItem(PROGRESS_KEY,JSON.stringify({shards,levels,owners:savedProgress?.owners??zones.map(()=>null),scores:savedProgress?.scores??{dragon:50,unicorn:50}}));}catch{}},[shards,levels]);
+  useEffect(initializeAudio, []);
+  useEffect(() => { setAudioScene(!team || booting ? "story" : inBattle ? "game" : "map"); }, [team, booting, inBattle]);
+
   if(booting)return <BootScreen onComplete={()=>setBooting(false)} />;
   if (!team) return <Onboarding locale={locale} setLocale={setLocale} onComplete={(selectedTeam) => { setTeam(selectedTeam); }} />;
   const saveRecord=async(name:string)=>{if(pendingRecord===null)return;const next=await submitRecord(zoneId,name,team,pendingRecord);setBoards(next);setRankError(false);const achieved = (gameMode==="rps" ? (pendingRecord>=8?3:pendingRecord>=3?2:1) : (gameMode==="memory" ? (pendingRecord<=30000?3:pendingRecord<=60000?2:1) : (pendingRecord>=90000?3:pendingRecord>=30000?2:1))) as EvolutionLevel;setLevels(old=>({...old,[team]:Math.max(old[team],achieved) as EvolutionLevel}));setPendingRecord(null);setInBattle(false);};
 
   const play = (move: Rps) => {
     if (enemyWins > 0 || pendingRecord !== null || roundBusy.current) return;
+    playSound("attack");
     roundBusy.current = true; setRoundPending(true);
     setRoundSerial(value => value + 1);
     const moves: Rps[] = ["rock", "paper", "scissors"];
@@ -536,6 +543,7 @@ export default function App() {
     const didWin = rpsResult(move, rival) === "win";
     const didLose = rpsResult(move, rival) === "lose";
     roundTimer.current = window.setTimeout(() => {
+      playSound(didWin ? "win" : didLose ? "lose" : "collect");
       roundBusy.current = false;
       setRoundPending(false);
       if (didLose && playerWins > 0) setPendingRecord(playerWins);
@@ -611,6 +619,7 @@ export default function App() {
           <div className="unicorn-score"><b>{scores.unicorn}</b><span>UNICORN</span></div>
         </div>
         <div className="header-tools">
+          <SoundSettings ko={locale === "ko"} />
           <LanguageToggle locale={locale} onChange={setLocale} />
         </div>
       </header>
@@ -655,7 +664,7 @@ export default function App() {
                   <button onClick={() => changeMapZoom(-.2)} aria-label={locale === "ko" ? "축소" : "Zoom out"}>−</button>
                   <button className="map-reset" onClick={resetMapView} aria-label={locale === "ko" ? "지도 초기화" : "Reset map"}>⌂</button>
                 </div>
-                <div className="map-drag-hint">{locale === "ko" ? "드래그하여 이동 · 휠로 확대" : "DRAG TO PAN · SCROLL TO ZOOM"}</div>
+                <div className="map-drag-hint"><span className="desktop-map-hint">{locale === "ko" ? "드래그하여 이동 · 휠로 확대" : "DRAG TO PAN · SCROLL TO ZOOM"}</span><span className="mobile-map-hint">{locale === "ko" ? "밀어서 이동 · + / −로 확대" : "DRAG TO PAN · + / − TO ZOOM"}</span></div>
                 <div className="map-crosshair" aria-hidden="true"><i /><i /></div><div className="map-legend" aria-label={locale === "ko" ? "지도 범례" : "Map legend"}><span><img src={unicornManhole} alt="" />{locale === "ko" ? "유니콘" : "Unicorn"}</span><span><img src={dragonManhole} alt="" />{locale === "ko" ? "드래곤" : "Dragon"}</span><span><img src={closedManhole} alt="" />{locale === "ko" ? "중립" : "Neutral"}</span></div>
                 <div
                   className="map-canvas"
@@ -711,7 +720,7 @@ export default function App() {
               <div className="portal-inspector" style={{ backgroundImage: `linear-gradient(#08132150, #08132180), url("${landmarkBackgrounds[zone.id]}")`, backgroundSize: "cover", backgroundPosition: "center" }}><ManholePortal owner={owners[zone.id]} /><div className="street-lines" /></div>
               <div className={`portal-meta owner-${owners[zone.id] ?? "neutral"}`}><span>{t.portal}</span><b>NYC–0{zone.id + 1}</b><small>{owners[zone.id] ? `${t.occupied} // ${owners[zone.id]?.toUpperCase()}` : `${t.neutral} // ${zone.danger * 240} PX DEPTH`}</small></div>
               <div className="portal-game game-preview-row"><div className="game-preview-thumbnail" aria-hidden="true">{zone.game === "rps" ? <RpsIcon type="scissors" /> : zone.game === "runner" ? <GamePreview team={team} mode="runner" background={landmarkBackgrounds[zone.id]} label="Portal Runner gameplay" /> : <ArcadeBriefing team={team} index={["snake", "breakout", "memory", "invader"].indexOf(zone.game)} locale={locale} />}</div><div><span>ARCADE // {gameInfo[zone.game].code}</span><b>{locale === "ko" ? gameInfo[zone.game].ko : gameInfo[zone.game].en}</b></div></div>
-              <PixelButton onClick={() => { restart(); setGameMode(zone.game); setInBattle(true); }}>{locale === "ko" ? "게임 시작" : "START GAME"} <span>▶</span></PixelButton>
+              <PixelButton onClick={() => { playSound("portal"); restart(); setGameMode(zone.game); setInBattle(true); }}>{locale === "ko" ? "게임 시작" : "START GAME"} <span>▶</span></PixelButton>
             </>
           ) : gameMode === "runner" ? (
             <>
