@@ -25,6 +25,6 @@ export default function ArchiveText({ text, delay = 0, instant = false }: { text
   const complete = instant || count >= characters.length;
   return <span className={`archive-type ${complete ? "is-complete" : "is-typing"}`}>
     <span className="archive-accessible">{text}</span>
-    <span aria-hidden="true"><span>{characters.slice(0, complete ? characters.length : count).join("")}</span><span className="type-unrevealed">{complete ? "" : characters.slice(count).join("")}</span></span>
+    <span aria-hidden="true">{characters.map((character, index) => <span key={index} className={!complete && index >= count ? "type-unrevealed" : undefined}>{character}</span>)}</span>
   </span>;
 }

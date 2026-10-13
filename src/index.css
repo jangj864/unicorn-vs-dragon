@@ -1277,7 +1277,7 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 
 /* Archive reader: one editorial system across every story page. */
 .classified-scene.archive-reader { width: min(1020px, calc(100% - 32px)); }
-.archive-reader .classified-file { display: grid; grid-template-columns: 1.35fr 1fr; grid-template-rows: auto auto auto auto 1fr auto; column-gap: 32px; height: clamp(460px, calc(100svh - 215px), 650px); padding: 28px; background: #d9d2b9; box-shadow: 8px 8px 0 #050b12; transform: none; border: 1px solid #8e8c79; }
+.archive-reader .classified-file { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(0,1fr); grid-template-rows: auto auto auto auto 1fr auto; column-gap: 32px; height: clamp(460px, calc(100svh - 215px), 650px); padding: 28px; background: #d9d2b9; box-shadow: 8px 8px 0 #050b12; transform: none; border: 1px solid #8e8c79; }
 .archive-reader .classified-file::before,.archive-reader .file-edge,.archive-reader .redaction { display: none; }
 .archive-reader .file-meta { grid-column: 1 / -1; padding-bottom: 18px; margin-bottom: 22px; border-bottom: 1px solid #98957e; color: #565a51; font-size: 7px; }
 .archive-reader .file-kicker { grid-column: 2; grid-row: 2; font-size: 7px; line-height: 1.7; color: #6a5a42; margin: 0 0 12px; }
@@ -1368,12 +1368,13 @@ p, h1, h2, strong, small { text-wrap: pretty; }
   100% { box-shadow: inset -90px 0 100px #30291c66, 4px 8px 10px #0001; }
 }
 @media (max-width:760px) {
-  .archive-reader .classified-cover { height: auto; min-height: min(690px, calc(100svh - 195px)); padding: 24px; gap: 16px; grid-template-columns: 1fr; grid-template-rows: auto minmax(180px, 1fr); }
+  .archive-reader .classified-cover { height: auto; min-height: 0; padding: 0; gap: 0; grid-template-columns: 1fr; grid-template-rows: auto; }
+  .archive-reader .classified-cover > .cover-identity { display: none; }
   .cover-identity h1 { font-size: 27px; margin: 12px 0 4px; }
   .cover-identity p { font-size: 14px; margin: 4px 0; }
   .cover-rule,.cover-identity small { display: none; }
   .cover-identity b { font-size: 7px; margin-top: 10px; }
-  .archive-reader .classified-cover img { max-height: 310px; border-left: 0; border-top: 1px solid #979077; padding: 12px 0 0; }
+  .archive-reader .classified-cover img { display: block; width: 100%; height: auto; max-height: none; border: 0; padding: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .archive-reader .book-sheet { animation: none !important; } }
 .archive-reader .book-sheet { backface-visibility: hidden; }
@@ -1509,7 +1510,7 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .faction-next { width: min(360px,100%); margin: 24px auto 0; }
 .faction-next .pixel-button { margin: 0; width: 100%; }
 /* Archive playback: legible text, a slow film scan, and physical paper movement. */
-.archive-type { position: relative; }
+.archive-type { position: relative; text-wrap: wrap; }
 .type-unrevealed { visibility: hidden; }
 .archive-accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .archive-reader .file-body-content { grid-column: 2; grid-row: 5; min-width: 0; }
