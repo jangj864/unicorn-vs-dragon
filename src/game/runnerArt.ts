@@ -1,15 +1,13 @@
-import platformUrl from "../imports/arcade-props/runner-platform.png";
-import pillarUrl from "../imports/arcade-props/runner-pillar.png";
-import crateUrl from "../imports/arcade-props/runner-crate.png";
-import blockUrl from "../imports/arcade-props/runner-cracked-block.png";
+import { loadImage } from "./imageCache";
+import platformUrl from "../imports/arcade-props/runner-platform.webp";
+import pillarUrl from "../imports/arcade-props/runner-pillar.webp";
+import crateUrl from "../imports/arcade-props/runner-crate.webp";
+import blockUrl from "../imports/arcade-props/runner-cracked-block.webp";
 import { runnerObstacle, type Game } from "./engine";
 
-export function loadRunnerArt(onLoad?: () => void) {
+export function loadRunnerArt() {
   return [platformUrl, pillarUrl, crateUrl, blockUrl].map(url => {
-    const image = new Image();
-    if (onLoad) image.onload = onLoad;
-    image.src = url;
-    return image;
+    return loadImage(url);
   });
 }
 

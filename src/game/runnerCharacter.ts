@@ -1,9 +1,10 @@
-import u1 from "../imports/arcade-props/runner-unicorn-1.png";
-import u2 from "../imports/arcade-props/runner-unicorn-2.png";
-import u3 from "../imports/arcade-props/runner-unicorn-3.png";
-import d1 from "../imports/arcade-props/runner-dragon-1.png";
-import d2 from "../imports/arcade-props/runner-dragon-2.png";
-import d3 from "../imports/arcade-props/runner-dragon-3.png";
+import { loadImage } from "./imageCache";
+import u1 from "../imports/arcade-props/runner-unicorn-1.webp";
+import u2 from "../imports/arcade-props/runner-unicorn-2.webp";
+import u3 from "../imports/arcade-props/runner-unicorn-3.webp";
+import d1 from "../imports/arcade-props/runner-dragon-1.webp";
+import d2 from "../imports/arcade-props/runner-dragon-2.webp";
+import d3 from "../imports/arcade-props/runner-dragon-3.webp";
 import type { Game } from "./engine";
 
 const characters = {
@@ -17,8 +18,7 @@ export function runnerCharacter(team: "unicorn" | "dragon", level: number) {
 
 export function loadRunnerCharacter(team: "unicorn" | "dragon", level: number) {
   const art = runnerCharacter(team, level);
-  const image = new Image();
-  image.src = art.url;
+  const image = loadImage(art.url);
   return { image, crop: art.crop };
 }
 

@@ -6,10 +6,11 @@
   "packageManager": "pnpm@10.34.3",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/check-assets.mjs && vite build",
-    "test": "node --test tests/arcade.test.mjs",
+    "build": "pnpm typecheck && node scripts/check-assets.mjs && vite build",
+    "test": "node --test tests/*.test.mjs",
     "preview": "vite preview",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "react": "^19.0.0",

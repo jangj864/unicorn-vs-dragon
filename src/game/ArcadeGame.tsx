@@ -1,13 +1,15 @@
+import { draw } from "./drawGame";
+import { loadImage, watchImages } from "./imageCache";
 import { playSound, pauseMusic } from "./audio";
-import { loadBreakoutArt, drawBreakoutArt } from "./breakoutArt";
-import { drawRunnerCharacter, loadRunnerCharacter } from "./runnerCharacter";
+import { loadBreakoutArt } from "./breakoutArt";
+import { loadRunnerCharacter } from "./runnerCharacter";
 import { memoryCards } from "./memoryCards";
-import { drawInvaderArt, loadInvaderArt, type InvaderArt } from "./invaderArt";
-import { drawRunnerArt, loadRunnerArt } from "./runnerArt";
-import { drawSnakeSkin, loadSnakeSkin, type SnakeSkin } from "./snakeSkin";
+import { loadInvaderArt } from "./invaderArt";
+import { loadRunnerArt } from "./runnerArt";
+import { loadSnakeSkin } from "./snakeSkin";
 import { formatRecord } from "./rankings";
-import { useEffect, useRef, useState } from "react";
-import { blankInput, createGame, flipCard, stepGame, turnSnake, WIDTH, HEIGHT, type Game, type Mode } from "./engine";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { blankInput, createGame, flipCard, stepGame, turnSnake, WIDTH, HEIGHT, type Mode } from "./engine";
 
 import "./arcade.css";
 
@@ -16,71 +18,10 @@ const names = {
   snake: ["서펀트 스네이크", "SERPENT SNAKE"], breakout: ["브릭 브레이커", "BRICK BREAKER"],
   memory: ["룬 메모리", "RUNE MEMORY"], invader: ["스카이 인베이더", "SKY INVADER"], runner: ["포탈 러너", "PORTAL RUNNER"],
 };
-const runePatterns = [
-  ["00100","01110","11111","01110","00100"], ["00100","01110","10101","00100","00100"],
-  ["10101","11111","01110","01110","00100"], ["01110","11011","10001","11011","01110"],
-  ["00110","01100","11111","00110","01100"], ["10101","01110","11111","01110","10101"],
-];
-const enemyPixels=["00100100","00011000","00111100","01111110","11011011","11111111","10100101","00100100"];
-const shipPixels=["00011000","00111100","00111100","11111111","11011011","11011011","00011000"];
-
-function sprite(ctx: CanvasRenderingContext2D, rows: string[], x: number, y: number, unit: number, color: string) {
-  ctx.fillStyle=color;
-  rows.forEach((row, j)=>[...row].forEach((cell,i)=>{if(cell==="1"){const px=Math.round(x+i*unit),py=Math.round(y+j*unit);ctx.fillStyle=color;ctx.fillRect(px,py,unit,unit);ctx.fillStyle=rows[j-1]?.[i]!=="1"?"#ffffff80":"#00000030";ctx.fillRect(px,py,unit,1);if((i+j)%3===0){ctx.fillStyle="#fff1b944";ctx.fillRect(px,py,1,unit);}}}));
-}
-
-export function draw(ctx: CanvasRenderingContext2D, g: Game, backdrop: HTMLImageElement, guardian: HTMLImageElement, snakeSkin?: SnakeSkin, runnerArt?: HTMLImageElement[], invaderArt?: InvaderArt, runnerHero?: ReturnType<typeof loadRunnerCharacter>, breakoutArt?: ReturnType<typeof loadBreakoutArt>) {
-  ctx.imageSmoothingEnabled=false;
-  ctx.fillStyle="#071320";ctx.fillRect(0,0,WIDTH,HEIGHT);
-  if(backdrop.complete&&backdrop.naturalWidth){ctx.globalAlpha=g.mode==="runner"?.7:.6;const scale=Math.max(WIDTH/backdrop.naturalWidth,HEIGHT/backdrop.naturalHeight);const w=backdrop.naturalWidth*scale,h=backdrop.naturalHeight*scale;ctx.drawImage(backdrop,(WIDTH-w)/2,HEIGHT-h,w,h);ctx.globalAlpha=1;}
-  // Small rain glints and riveted metal edges frame the landmark.
-  ctx.fillStyle="#adcbe32b";
-  for(let i=0;i<28;i++){const x=(i*73+Math.floor(g.elapsed*17))%480,y=(i*41+Math.floor(g.elapsed*52))%300;ctx.fillRect(x,y,1,4);}
-  for(const x of [4,468]){ctx.fillStyle="#34434d";ctx.fillRect(x,0,8,360);for(let y=12;y<360;y+=36){ctx.fillStyle="#91a3a4";ctx.fillRect(x+2,y,3,3);ctx.fillStyle="#111d29";ctx.fillRect(x+3,y+1,2,1);}}
-  ctx.fillStyle="#20364b";
-  for(let x=0;x<480;x+=24)for(let y=0;y<360;y+=24)ctx.fillRect(x,y,1,1);
-  if(g.mode==="snake"){
-    ctx.fillStyle="#0a1c284d";ctx.fillRect(18,24,444,312);
-    ctx.strokeStyle="#284659";ctx.strokeRect(18,24,444,312);
-    if (!snakeSkin || !drawSnakeSkin(ctx, g, snakeSkin)) {
-    g.snake.forEach((p,i)=>{ctx.fillStyle=i===0?"#fff0b0":"#55cabc";ctx.fillRect(20+p.x*22,26+p.y*22,20,20);ctx.fillStyle="#24595c";ctx.fillRect(23+p.x*22,39+p.y*22,14,4);ctx.fillStyle="#9ce3be";ctx.fillRect(23+p.x*22,28+p.y*22,14,3);ctx.fillStyle="#1c746c";for(let k=0;k<3;k++){ctx.fillRect(24+p.x*22+k*5,33+p.y*22+(k%2)*2,3,3);}ctx.fillStyle="#e6d598";ctx.fillRect(28+p.x*22,30+p.y*22,4,2);});
-    const h=g.snake[0];ctx.fillStyle="#071320";ctx.fillRect(25+h.x*22,29+h.y*22,4,4);ctx.fillRect(34+h.x*22,29+h.y*22,4,4);
-    }
-    sprite(ctx,runePatterns[0],23+g.food.x*22,29+g.food.y*22,3,"#f0c85c");
-  }else if(g.mode==="breakout"){
-    if (!breakoutArt || !drawBreakoutArt(ctx,g,breakoutArt)) {
-    g.bricks.forEach((b,i)=>{if(!b.alive)return;ctx.fillStyle=["#dc706d","#e4bc59","#63bdb9","#7799c5"][Math.floor(i/6)];ctx.fillRect(b.x,b.y,68,18);ctx.fillStyle="#ffffff50";ctx.fillRect(b.x+3,b.y+2,62,3);ctx.fillStyle="#00000055";ctx.fillRect(b.x,b.y+14,68,4);ctx.fillStyle="#101c3066";ctx.fillRect(b.x+22,b.y+4,2,10);ctx.fillRect(b.x+45,b.y+4,2,10);ctx.fillRect(b.x+3,b.y+9,62,1);ctx.fillStyle="#fff2be88";ctx.fillRect(b.x+4,b.y+4,3,3);ctx.fillRect(b.x+61,b.y+4,3,3);});
-    ctx.fillStyle="#f0c85c";ctx.fillRect(g.paddle-40,316,80,10);ctx.fillStyle="#fff0b0";ctx.fillRect(g.paddle-33,316,66,3);ctx.fillStyle="#476575";ctx.fillRect(g.paddle-40,315,8,12);ctx.fillRect(g.paddle+32,315,8,12);ctx.fillStyle="#111e2b";for(let n=-24;n<28;n+=8)ctx.fillRect(g.paddle+n,321,4,3);
-    }
-    ctx.fillStyle="#fff4ce";ctx.fillRect(g.ball.x-4,g.ball.y-4,8,8);ctx.fillStyle="#fff";ctx.fillRect(g.ball.x-3,g.ball.y-3,3,3);ctx.fillStyle="#b58248";ctx.fillRect(g.ball.x-3,g.ball.y+3,6,2);
-    if(g.ball.docked){ctx.fillStyle="#f0c85c";ctx.font="10px monospace";ctx.textAlign="center";ctx.fillText("SPACE / LAUNCH",240,345);}
-  }else if(g.mode==="invader"){
-    if (!invaderArt || !drawInvaderArt(ctx, g, invaderArt)) {
-    g.enemies.forEach(e=>{if(e.alive)sprite(ctx,enemyPixels,e.x,e.y,3,"#e67d78");});
-    if(g.immune===0||Math.floor(g.elapsed*12)%2===0)sprite(ctx,shipPixels,g.ship-16,304,4,"#72e4dd");
-    g.bullets.forEach(b=>{ctx.fillStyle=b.enemy?"#ed7b76":"#f9dc79";ctx.fillRect(b.x-2,b.y,4,10);});
-    }
-  }else if(g.mode==="runner"){
-    if (!runnerArt || !drawRunnerArt(ctx, g, runnerArt)) {
-    ctx.fillStyle="#102335";ctx.fillRect(0,304,480,56);ctx.fillStyle="#708392";ctx.fillRect(0,304,480,4);
-    for(let row=0;row<3;row++)for(let n=0;n<13;n++){const x=n*42-(g.distance%42)+(row%2)*21;ctx.fillStyle=row%2?"#263e50":"#314b5a";ctx.fillRect(x,310+row*17,39,14);ctx.fillStyle="#7296a03b";ctx.fillRect(x+3,311+row*17,25,2);ctx.fillStyle="#101d2a";ctx.fillRect(x+6,318+row*17,9,1);}
-    for(let x=-(g.distance%64);x<480;x+=64){ctx.fillStyle="#d1b358";ctx.fillRect(x,332,30,4);}
-    for(const point of g.obstacles){const x=point-g.distance+80;if(x< -35||x>500)continue;ctx.fillStyle="#b96a48";ctx.fillRect(x,269,24,35);ctx.fillStyle="#ffd879";ctx.fillRect(x-3,270,30,6);ctx.fillRect(x-3,291,30,6);ctx.fillStyle="#5e3428";ctx.fillRect(x+3,276,3,14);ctx.fillRect(x+17,276,3,14);ctx.fillStyle="#ffe4ac";ctx.fillRect(x,271,6,2);ctx.fillStyle="#423d37";ctx.fillRect(x+7,279,10,8);ctx.fillStyle="#b7b49a";ctx.fillRect(x+9,281,6,2);}
-    }
-    for(const point of g.coins){const x=point-g.distance+80;if(x>0&&x<480)sprite(ctx,runePatterns[0],x-7,247,3,"#ffe07e");}
-    if(g.immune===0||Math.floor(g.elapsed*12)%2===0){
-      if(runnerHero && drawRunnerCharacter(ctx,g,runnerHero)) { /* Running art is aligned to the ground. */ }
-      else sprite(ctx,shipPixels,64,270-g.height,4,"#79e6dd");
-    }
-    const portalX=g.survival?Infinity:3000-g.distance+80;
-    if(portalX<480){ctx.fillStyle="#f0c85c";ctx.fillRect(portalX,244,8,60);ctx.fillRect(portalX+44,244,8,60);ctx.fillRect(portalX,244,52,8);ctx.fillStyle="#53c9e3";ctx.fillRect(portalX+8,252,36,52);}
-  }
-  ctx.strokeStyle="#496077";ctx.lineWidth=2;ctx.strokeRect(1,1,478,358);
-}
-
 export default function ArcadeGame({team,mode,locale,guardian,guardianLevel=1,background,onFinish,onExit}:Props){
   const ko=locale==="ko",lang=ko?0:1;
-  const game=useRef<Game>(createGame(mode, Math.random, true));
+  const [initialGame] = useState(() => createGame(mode, Math.random, true));
+  const game = useRef(initialGame);
   const input=useRef(blankInput());
   const canvas=useRef<HTMLCanvasElement>(null);
   const [phase,setPhase]=useState<"ready"|"play"|"paused">("ready");
@@ -89,13 +30,18 @@ export default function ArcadeGame({team,mode,locale,guardian,guardianLevel=1,ba
   useEffect(() => { pauseMusic(phase === "paused"); return () => pauseMusic(false); }, [phase]);
   const g=game.current;
   const reset=()=>{game.current=createGame(mode, Math.random, true);input.current=blankInput();claimed.current=false;setPhase("ready");refresh(n=>n+1);};
+  const art = useMemo(() => ({
+    image: loadImage(background),
+    breakoutArt: mode === "breakout" ? loadBreakoutArt(team) : undefined,
+    invaderArt: mode === "invader" ? loadInvaderArt(team) : undefined,
+    runnerArt: mode === "runner" ? loadRunnerArt() : undefined,
+    runnerHero: mode === "runner" ? loadRunnerCharacter(team, guardianLevel) : undefined,
+    snakeSkin: mode === "snake" ? loadSnakeSkin(team) : undefined,
+  }), [background, team, mode, guardianLevel]);
   useEffect(()=>{
-    const image=new Image();image.src=background;const hero=new Image();hero.src=guardian;
-    const breakoutArt = mode === "breakout" ? loadBreakoutArt(team) : undefined;
-    const invaderArt = mode === "invader" ? loadInvaderArt(team) : undefined;
-    const runnerArt = mode === "runner" ? loadRunnerArt() : undefined;
-    const runnerHero = mode === "runner" ? loadRunnerCharacter(team,guardianLevel) : undefined;
-    const snakeSkin = mode === "snake" ? loadSnakeSkin(team) : undefined;
+    const { image, breakoutArt, invaderArt, runnerArt, runnerHero, snakeSkin } = art;
+    const paint = () => { const context = canvas.current?.getContext("2d"); if (context) draw(context, game.current, image, snakeSkin, runnerArt, invaderArt, runnerHero, breakoutArt); };
+    const stopWatching = watchImages([image, ...(breakoutArt?.images ?? []), ...(invaderArt?.images ?? []), ...(runnerArt ?? []), ...(snakeSkin?.images ?? []), ...(runnerHero ? [runnerHero.image] : [])], paint);
     let frame=0,last=0,update=0;
     const loop=(now:number)=>{
       const dt=last?Math.min(.04,(now-last)/1000):0;last=now;
@@ -108,12 +54,12 @@ export default function ArcadeGame({team,mode,locale,guardian,guardianLevel=1,ba
         if (mode === "runner" && before.height === 0 && game.current.height > 0) playSound("jump");
         if (mode === "invader" && game.current.bullets.filter(b => !b.enemy).length > before.bullets) playSound("attack");
       }
-      const context=canvas.current?.getContext("2d");if(context)draw(context,game.current,image,hero,snakeSkin,runnerArt,invaderArt,runnerHero,breakoutArt);
-      if(now-update>80){refresh(n=>n+1);update=now;}
-      frame=requestAnimationFrame(loop);
+      paint();
+      if (phase === "play" && (now-update >= 100 || game.current.status !== "running")) { refresh(n=>n+1); update=now; }
+      if (phase === "play" && game.current.status === "running") frame=requestAnimationFrame(loop);
     };
-    frame=requestAnimationFrame(loop);return()=>cancelAnimationFrame(frame);
-  },[phase,guardian,guardianLevel,background,team,mode]);
+    frame=requestAnimationFrame(loop);return()=>{cancelAnimationFrame(frame);stopWatching();};
+  },[phase,art,mode]);
   useEffect(()=>{
     const onKey=(e:KeyboardEvent)=>{
       const target=e.target as HTMLElement;
@@ -148,7 +94,7 @@ export default function ArcadeGame({team,mode,locale,guardian,guardianLevel=1,ba
       "SPACE/↑ 점프. 속도가 올라가는 장애물을 피하며 오래 버티세요."
     ]:["ARROWS/WASD · No time limit. Collect shards; avoid walls and your tail.","ARROWS/DRAG · Auto launch. Clear bricks to continue the next wave.","Match all 10 pairs as fast as possible. Fastest completion takes #1.","ARROWS + SPACE · Clear invaders for the next, faster wave.","SPACE/↑ · Jump over obstacles. Speed increases as you survive."])[["snake","breakout","memory","invader","runner"].indexOf(mode)]}</p>
     <div className="cabinet-screen" style={{ backgroundImage: `linear-gradient(#07132055, #07132066), url("${background}")`, backgroundSize: "cover", backgroundPosition: "center bottom", backgroundRepeat: "no-repeat" }}>
-      {mode==="memory"?<div className="rune-board">{g.deck.map((symbol,i)=>{const shown=g.open.includes(i)||g.matched.includes(i);return <button key={i} className={g.matched.includes(i)?"rune matched":shown?"rune revealed":"rune"} aria-label={`${ko?"카드":"Card"} ${i+1}${shown?` · ${ko?"룬":"Rune"} ${symbol+1}`:""}`} aria-pressed={shown} disabled={phase!=="play"||g.status!=="running"||g.matched.includes(i)||g.open.length===2} onClick={()=>{const matched=g.matched.length;flipCard(g,i);if(g.matched.length>matched)playSound("collect");refresh(n=>n+1);}}>{shown?<img src={memoryCards[symbol]} alt="" draggable={false}/>:<><span>✦</span><small>{String(i+1).padStart(2,"0")}</small></>}</button>;})}</div>:<canvas ref={canvas} width={WIDTH} height={HEIGHT} aria-label={names[mode][lang]} onPointerDown={e=>{if(mode!=="breakout"&&mode!=="invader")return;e.currentTarget.setPointerCapture(e.pointerId);input.current.pointer=(e.clientX-e.currentTarget.getBoundingClientRect().left)/e.currentTarget.getBoundingClientRect().width*WIDTH;}} onPointerMove={e=>{if(e.buttons&&(mode==="breakout"||mode==="invader"))input.current.pointer=(e.clientX-e.currentTarget.getBoundingClientRect().left)/e.currentTarget.getBoundingClientRect().width*WIDTH;}}/>}
+      {mode==="memory"?<div className="rune-board">{g.deck.map((symbol,i)=>{const shown=g.open.includes(i)||g.matched.includes(i);return <button key={i} className={g.matched.includes(i)?"rune matched":shown?"rune revealed":"rune"} aria-label={`${ko?"카드":"Card"} ${i+1}${shown?` · ${ko?"룬":"Rune"} ${symbol+1}`:""}`} aria-pressed={shown} disabled={phase!=="play"||g.status!=="running"||g.matched.includes(i)||g.open.length===2} onClick={()=>{const matched=g.matched.length;flipCard(g,i);if(g.status==="won")playSound("win");else if(g.matched.length>matched)playSound("collect");refresh(n=>n+1);}}>{shown?<img src={memoryCards[symbol]} alt="" draggable={false}/>:<><span>✦</span><small>{String(i+1).padStart(2,"0")}</small></>}</button>;})}</div>:<canvas ref={canvas} width={WIDTH} height={HEIGHT} aria-label={names[mode][lang]} onPointerDown={e=>{if(mode!=="breakout"&&mode!=="invader")return;e.currentTarget.setPointerCapture(e.pointerId);input.current.pointer=(e.clientX-e.currentTarget.getBoundingClientRect().left)/e.currentTarget.getBoundingClientRect().width*WIDTH;}} onPointerMove={e=>{if(e.buttons&&(mode==="breakout"||mode==="invader"))input.current.pointer=(e.clientX-e.currentTarget.getBoundingClientRect().left)/e.currentTarget.getBoundingClientRect().width*WIDTH;}}/>}
       {(phase!=="play"||g.status!=="running")&&<div className="cabinet-overlay" role="status"><span className="pixel-label">{g.status!=="running"?"RUN COMPLETE":phase==="paused"?"PAUSED":(mode==="memory"?"TIME ATTACK":"SURVIVAL CHALLENGE")}</span><img src={guardian} alt=""/><h3>{g.status!=="running"?formatRecord(Math.floor(g.elapsed*1000),false):names[mode][lang]}</h3><p>{mode==="memory"?(ko?"최단 완료 시간이 1위 · 1위 진영이 포탈 점령":"FASTEST CLEAR TAKES #1 · #1 CONTROLS THE PORTAL"):(ko?"가장 오래 버틴 기록이 1위 · 1위 진영이 포탈 점령":"LONGEST SURVIVAL TAKES #1 · #1 CONTROLS THE PORTAL")}</p><button className="pixel-button" onClick={()=>{if(g.status!=="running"){if(!claimed.current){claimed.current=true;onFinish(Math.max(1,Math.floor(g.elapsed*1000)));}}else{input.current=blankInput();setPhase("play");}}}>{g.status!=="running"?(ko?"기록 등록":"REGISTER RECORD"):phase==="paused"?(ko?"계속하기":"RESUME"):(ko?"시작하기":"START")}</button>{g.status!=="running"&&<button className="cabinet-exit" onClick={reset}>{ko?"등록 없이 재도전":"RETRY WITHOUT SAVING"}</button>}<button className="cabinet-exit" onClick={onExit}>{ko?"지도로 돌아가기":"BACK TO MAP"}</button></div>}
 
     </div>

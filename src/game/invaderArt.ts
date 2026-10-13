@@ -1,18 +1,16 @@
-import unicornShip from "../imports/arcade-props/unicorn-ship.png";
-import dragonShip from "../imports/arcade-props/dragon-ship.png";
-import unicornHead from "../imports/arcade-props/unicorn-head.png";
-import dragonHead from "../imports/arcade-props/dragon-head.png";
-import unicornShot from "../imports/arcade-props/unicorn-shot.png";
-import dragonShot from "../imports/arcade-props/dragon-shot.png";
+import { loadImage } from "./imageCache";
+import unicornShip from "../imports/arcade-props/unicorn-ship.webp";
+import dragonShip from "../imports/arcade-props/dragon-ship.webp";
+import unicornHead from "../imports/arcade-props/unicorn-head.webp";
+import dragonHead from "../imports/arcade-props/dragon-head.webp";
+import unicornShot from "../imports/arcade-props/unicorn-shot.webp";
+import dragonShot from "../imports/arcade-props/dragon-shot.webp";
 import type { Game } from "./engine";
 
 export type InvaderArt = { team: "dragon" | "unicorn"; images: HTMLImageElement[] };
-export function loadInvaderArt(team: InvaderArt["team"], onLoad?: () => void): InvaderArt {
+export function loadInvaderArt(team: InvaderArt["team"]): InvaderArt {
   return { team, images: [unicornShip, dragonShip, unicornHead, dragonHead, unicornShot, dragonShot].map(url => {
-    const image = new Image();
-    if (onLoad) image.onload = onLoad;
-    image.src = url;
-    return image;
+    return loadImage(url);
   }) };
 }
 

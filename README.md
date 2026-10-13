@@ -33,3 +33,7 @@ git push origin main
 `git add`에는 실제 파일 경로를 넣으세요. Git LFS가 이미지·폰트를 업로드하고, push가 완료되면 자동 배포가 시작됩니다. 배포 진행 상황은 https://github.com/jangj864/unicorn-vs-dragon/actions 에서 확인할 수 있습니다. 테스트나 빌드가 실패하면 새 버전은 게시되지 않습니다. 다른 브랜치에서 작업한 경우 `main`에 병합하면 배포됩니다.
 
 기존 수동 실행(`workflow_dispatch`)도 사용할 수 있습니다. Windows에서 작업을 이어갈 때도 같은 Node·pnpm 버전과 Git LFS를 사용하고 먼저 최신 코드를 pull하세요. 브라우저에 저장된 개인 진행 기록은 기기마다 따로 보관됩니다.
+
+## 이미지 최적화
+
+화면에서는 무손실 WebP를 사용하며 원본 PNG는 보관합니다. 원본을 수정한 경우 Pillow가 설치된 Python으로 `python3 scripts/optimize-images.py`를 실행해 WebP도 갱신하세요. 이 스크립트는 원본과 변환본의 픽셀 일치를 검증합니다. `pnpm build`는 타입 검사와 이미지·폰트 파일 검사를 함께 실행합니다.

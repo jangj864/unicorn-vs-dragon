@@ -2,39 +2,39 @@ import SoundSettings from "./game/SoundSettings";
 import { initializeAudio, setAudioScene, playSound } from "./game/audio";
 import { memoryCards } from "./game/memoryCards";
 import RpsCombat, { ROUND_DURATION } from "./game/RpsCombat";
-import unicornChest from "./imports/arcade-props/unicorn-chest.png";
-import dragonChest from "./imports/arcade-props/dragon-chest.png";
+import unicornChest from "./imports/arcade-props/unicorn-chest.webp";
+import dragonChest from "./imports/arcade-props/dragon-chest.webp";
 import ArchiveText from "./game/ArchiveText";
 import { archiveStories, archiveEvidence } from "./game/archiveStories";
 import BootScreen from "./game/BootScreen";
 import Leaderboard, { RecordEntry } from "./game/Leaderboard";
 import { fetchBoards, submitRecord, type Boards } from "./game/rankings";
 import GamePreview from "./game/GamePreview";
-import landmark0 from "./imports/landmark-central-park.png";
-import landmark1 from "./imports/landmark-times-square.png";
-import landmark2 from "./imports/landmark-empire-state.png";
-import landmark3 from "./imports/landmark-washington-square.png";
-import landmark4 from "./imports/landmark-soho.png";
-import landmark5 from "./imports/landmark-wall-street.png";
-import landmark6 from "./imports/landmark-dumbo.png";
-import landmark7 from "./imports/landmark-liberty.png";
+import landmark0 from "./imports/landmark-central-park.webp";
+import landmark1 from "./imports/landmark-times-square.webp";
+import landmark2 from "./imports/landmark-empire-state.webp";
+import landmark3 from "./imports/landmark-washington-square.webp";
+import landmark4 from "./imports/landmark-soho.webp";
+import landmark5 from "./imports/landmark-wall-street.webp";
+import landmark6 from "./imports/landmark-dumbo.webp";
+import landmark7 from "./imports/landmark-liberty.webp";
 import { useEffect, useMemo, useRef, useState } from "react";
 import ArcadeGame from "./game/ArcadeGame";
 import { rpsResult } from "./game/engine";
 import { readProgress, PROGRESS_KEY } from "./game/progress";
-import dragonStage1 from "./imports/black-pixel-dragon-stage-1.png";
-import dragonStage2 from "./imports/black-pixel-dragon-stage-2.png";
-import dragonStage3 from "./imports/black-pixel-dragon-v2.png";
-import unicornPixelArt from "./imports/white-pixel-unicorn.png";
-import unicornStage1 from "./imports/white-pixel-unicorn-stage-1.png";
-import unicornStage2 from "./imports/white-pixel-unicorn-stage-2.png";
-import nycTacticalMap from "./imports/nyc-tactical-map-reference.png";
-import classifiedCover from "./imports/classified-report-cover.png";
-import classifiedNycStreet from "./imports/classified-nyc-street.png";
-import closedManhole from "./imports/manhole-closed-v2.png";
-import openManhole from "./imports/manhole-open-portal.png";
-import unicornManhole from "./imports/manhole-unicorn.png";
-import dragonManhole from "./imports/manhole-dragon.png";
+import dragonStage1 from "./imports/black-pixel-dragon-stage-1.webp";
+import dragonStage2 from "./imports/black-pixel-dragon-stage-2.webp";
+import dragonStage3 from "./imports/black-pixel-dragon-v2.webp";
+import unicornPixelArt from "./imports/white-pixel-unicorn.webp";
+import unicornStage1 from "./imports/white-pixel-unicorn-stage-1.webp";
+import unicornStage2 from "./imports/white-pixel-unicorn-stage-2.webp";
+import nycTacticalMap from "./imports/nyc-tactical-map-reference.webp";
+import classifiedCover from "./imports/classified-report-cover.webp";
+import classifiedNycStreet from "./imports/classified-nyc-street.webp";
+import closedManhole from "./imports/manhole-closed-v2.webp";
+import openManhole from "./imports/manhole-open-portal.webp";
+import unicornManhole from "./imports/manhole-unicorn.webp";
+import dragonManhole from "./imports/manhole-dragon.webp";
 
 type Locale = "ko" | "en";
 type Team = "unicorn" | "dragon";
@@ -309,7 +309,7 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
             {step > 0 && <div className="archive-status"><span>NYC OCCULT DEFENSE BUREAU</span><b>SECURITY LEVEL // 08</b></div>}
             <div className="file-stack">
             <div className={`book-sheet current-sheet ${isTurning && turnDirection === "next" ? "sheet-outgoing" : ""}`}>{renderFile(step)}</div>
-            {turnTarget !== null && turnTarget < factionStep && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget)}</div>}
+            {turnTarget !== null && turnTarget < factionStep && <div className={`book-sheet destination-sheet ${turnDirection === "back" ? "sheet-incoming" : ""}`} aria-hidden="true">{renderFile(turnTarget, true)}</div>}
             <div className="page-underlay" aria-hidden="true" />
             </div>
             <div className="story-controls">

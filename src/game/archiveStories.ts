@@ -1,13 +1,13 @@
-import disguise from "../imports/archive/unicorn-disguise.png";
-import apartment from "../imports/archive/unicorn-apartment.png";
-import escapeWide from "../imports/archive/unicorn-fire-escape-wide.png";
+import disguise from "../imports/archive/unicorn-disguise.webp";
+import apartment from "../imports/archive/unicorn-apartment.webp";
+import escapeWide from "../imports/archive/unicorn-fire-escape-wide.webp";
 
-import rooftop from "../imports/archive/unicorn-rooftop.png";
-import claw from "../imports/archive/claw-evidence.png";
-import empire from "../imports/archive/dragon-empire-state.png";
-import bridge from "../imports/archive/dragon-brooklyn-bridge.png";
-import arch from "../imports/archive/dragon-washington-arch.png";
-import liberty from "../imports/archive/dragon-liberty.png";
+import rooftop from "../imports/archive/unicorn-rooftop.webp";
+import claw from "../imports/archive/claw-evidence.webp";
+import empire from "../imports/archive/dragon-empire-state.webp";
+import bridge from "../imports/archive/dragon-brooklyn-bridge.webp";
+import arch from "../imports/archive/dragon-washington-arch.webp";
+import liberty from "../imports/archive/dragon-liberty.webp";
 
 export const archiveEvidence = [
   [{ src: disguise, ko: "01-A · 거리에서 만난 이웃", en: "01-A · A neighbor on the sidewalk" }],

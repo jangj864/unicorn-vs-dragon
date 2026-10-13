@@ -1,10 +1,11 @@
+import { loadImage } from "./imageCache";
 import { useEffect, type CSSProperties, type ReactNode } from "react";
-import u1 from "../imports/arcade-props/attack-unicorn-1.png";
-import u2 from "../imports/arcade-props/attack-unicorn-2.png";
-import u3 from "../imports/arcade-props/attack-unicorn-3.png";
-import d1 from "../imports/arcade-props/attack-dragon-1.png";
-import d2 from "../imports/arcade-props/attack-dragon-2.png";
-import d3 from "../imports/arcade-props/attack-dragon-3.png";
+import u1 from "../imports/arcade-props/attack-unicorn-1.webp";
+import u2 from "../imports/arcade-props/attack-unicorn-2.webp";
+import u3 from "../imports/arcade-props/attack-unicorn-3.webp";
+import d1 from "../imports/arcade-props/attack-dragon-1.webp";
+import d2 from "../imports/arcade-props/attack-dragon-2.webp";
+import d3 from "../imports/arcade-props/attack-dragon-3.webp";
 import "./rpsCombat.css";
 
 const attacks = { dragon: [d1, d2, d3], unicorn: [u1, u2, u3] };
@@ -14,7 +15,7 @@ export default function RpsCombat({ team, level, result, active, round, streak, 
   team: "dragon" | "unicorn"; level: number; result: "win" | "lose" | "draw" | null;
   active: boolean; round: number; streak: number; locale: "ko" | "en"; dragon: ReactNode; unicorn: ReactNode;
 }) {
-  useEffect(() => { Object.values(attacks).flat().forEach(src => { const image = new Image(); image.src = src; }); }, []);
+  useEffect(() => { loadImage(attacks[team][level - 1]); loadImage(attacks[team === "dragon" ? "unicorn" : "dragon"][2]); }, [team, level]);
   const winner = result === "draw" || !result ? null : result === "win" ? team : team === "dragon" ? "unicorn" : "dragon";
   return <div key={round} className={`rps-combat ${active ? "is-active" : ""} outcome-${result ?? "ready"}`}>
     <div className="fighters combat-fighters">

@@ -1,18 +1,17 @@
-import headUrl from "../imports/dragon-snake-head.png";
-import bodyUrl from "../imports/dragon-snake-body.png";
-import tailUrl from "../imports/dragon-snake-tail.png";
-import unicornHead from "../imports/unicorn-snake-head.png";
-import unicornBody from "../imports/unicorn-snake-body.png";
-import unicornTail from "../imports/unicorn-snake-tail.png";
+import { loadImage } from "./imageCache";
+import headUrl from "../imports/dragon-snake-head.webp";
+import bodyUrl from "../imports/dragon-snake-body.webp";
+import tailUrl from "../imports/dragon-snake-tail.webp";
+import unicornHead from "../imports/unicorn-snake-head.webp";
+import unicornBody from "../imports/unicorn-snake-body.webp";
+import unicornTail from "../imports/unicorn-snake-tail.webp";
 import type { Game, Point } from "./engine";
 
 export type SnakeSkin = { images: HTMLImageElement[]; team: "dragon" | "unicorn" };
 export function loadSnakeSkin(team: SnakeSkin["team"]): SnakeSkin {
   const urls = team === "dragon" ? [headUrl, bodyUrl, tailUrl] : [unicornHead, unicornBody, unicornTail];
   return { team, images: urls.map(url => {
-    const image = new Image();
-    image.src = url;
-    return image;
+    return loadImage(url);
   }) };
 }
 
