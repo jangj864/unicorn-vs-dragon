@@ -1368,13 +1368,13 @@ p, h1, h2, strong, small { text-wrap: pretty; }
   100% { box-shadow: inset -90px 0 100px #30291c66, 4px 8px 10px #0001; }
 }
 @media (max-width:760px) {
-  .archive-reader .classified-cover { height: auto; min-height: 0; padding: 0; gap: 0; grid-template-columns: 1fr; grid-template-rows: auto; }
+  .archive-reader .classified-cover { height: clamp(400px, calc(100svh - 195px), 690px); min-height: 0; padding: 0; gap: 0; grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr); place-items: center; }
   .archive-reader .classified-cover > .cover-identity { display: none; }
   .cover-identity h1 { font-size: 27px; margin: 12px 0 4px; }
   .cover-identity p { font-size: 14px; margin: 4px 0; }
   .cover-rule,.cover-identity small { display: none; }
   .cover-identity b { font-size: 7px; margin-top: 10px; }
-  .archive-reader .classified-cover img { display: block; width: 100%; height: auto; max-height: none; border: 0; padding: 0; }
+  .archive-reader .classified-cover img { display: block; width: 75%; height: auto; max-height: 100%; margin: 0 auto; border: 0; padding: 0; object-fit: contain; }
 }
 @media (prefers-reduced-motion: reduce) { .archive-reader .book-sheet { animation: none !important; } }
 .archive-reader .book-sheet { backface-visibility: hidden; }
@@ -1514,9 +1514,9 @@ p, h1, h2, strong, small { text-wrap: pretty; }
 .type-unrevealed { visibility: hidden; }
 .archive-accessible { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .archive-reader .file-body-content { grid-column: 2; grid-row: 5; min-width: 0; }
-.archive-reading-controls { display: flex; justify-content: flex-start; margin: 12px 0 0; }
+.archive-reading-controls { display: flex; justify-content: flex-end; width: 100%; margin: 12px 0 0; }
 .archive-reveal-all { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 16px; border: 1px solid #98957e; background: #d9d2b9; color: #514c35; font: 11px/1.4 var(--pixel); cursor: pointer; }
-.archive-reveal-all > span { font-size: 22px; line-height: 1; }
+.archive-reveal-icon { font-size: 22px; line-height: 1; }
 .archive-reveal-all:hover:not(:disabled) { background: #e8e1c9; }
 .archive-reveal-all:disabled { opacity: .55; cursor: default; }
 .archive-reveal-all:focus-visible { outline: 2px solid #705226; outline-offset: 3px; }
@@ -1652,3 +1652,120 @@ img.loot-sprite { filter: none; }
 @media (prefers-reduced-motion:reduce) { .boot-splash { animation: none; } }
 
 .leaderboard-manhole { display: block; width: 32px; height: 32px; object-fit: contain; image-rendering: pixelated; }
+
+/* One book size: artwork uses the space left by the text, never grows the sheet. */
+.archive-reader { --book-height: clamp(560px, calc(100svh - 215px), 650px); }
+.archive-reader .file-stack,
+.archive-reader .book-sheet { height: var(--book-height); }
+.archive-reader .classified-cover,
+.archive-reader .classified-file { height: 100%; min-height: 0; }
+.archive-reader .classified-file > * { min-height: 0; }
+.archive-reader .evidence.archive-photo-pair {
+  align-self: stretch;
+  align-items: stretch;
+  height: 100%;
+  grid-template-rows: minmax(0, 1fr);
+}
+.archive-reader .archive-photo-pair figure {
+  height: 100%;
+  max-height: 100%;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+.archive-reader .archive-photo-pair img { height: 100%; min-height: 0; }
+.archive-reader .file-body-content { overflow-y: auto; }
+@media (max-width: 760px) {
+  .archive-reader { --book-height: clamp(690px, calc(100svh - 195px), 820px); }
+  .archive-reader .classified-file {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto auto;
+    padding: 16px;
+  }
+  .archive-reader .classified-file > *,
+  .archive-reader .classified-file > h1 { grid-column: 1; grid-row: auto; }
+  .archive-reader .file-meta { margin-bottom: 10px; padding-bottom: 8px; }
+  .archive-reader .file-kicker { margin: 0 0 6px; }
+  .archive-reader .classified-file h1 { font-size: 24px; padding-bottom: 8px; }
+  .archive-reader .file-lead { margin: 0 0 10px; padding-top: 8px; line-height: 1.5; }
+  .archive-reader .evidence { height: 100%; min-height: 0; }
+  .archive-reader .evidence.archive-photo-pair { padding: 14px 10px 10px; }
+  .archive-reader .archive-photo-pair figcaption { min-height: 0; padding: 8px 2px; font-size: 9px; }
+  .archive-reader .file-body-content { max-height: 250px; }
+  .archive-reader .file-body { margin: 10px 0 0; line-height: 1.6; }
+  .archive-reader .archive-reading-controls { margin-top: 6px; }
+  .archive-reader .file-footer { margin-top: 10px; padding-top: 8px; }
+}
+
+@media (max-width: 430px) {
+  .archive-reveal-label { display: none; }
+  .archive-reveal-all { min-width: 44px; justify-content: center; gap: 0; padding-inline: 10px; }
+}
+
+/* Keep faction actions in view while compact cards use the available height. */
+@media (max-width: 760px) {
+  .onboarding.is-choosing-team { height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .is-choosing-team .onboarding-top { flex-shrink: 0; }
+  .is-choosing-team .onboarding-content { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 12px 0 0; }
+  .is-choosing-team .game-title { flex: none; }
+  .is-choosing-team .game-title h1 { margin: 8px 0 4px; font-size: clamp(18px, 4.5vw, 28px); }
+  .is-choosing-team .game-title > p { font-size: 16px; }
+  .is-choosing-team .game-title > small { display: none; }
+  .is-choosing-team .choose-section { flex: 1; min-height: 0; margin-top: 12px; display: flex; flex-direction: column; }
+  .is-choosing-team .section-heading { flex: none; margin-bottom: 10px; gap: 10px; }
+  .is-choosing-team .section-heading h2 { font-size: 16px; margin-bottom: 3px; }
+  .is-choosing-team .team-grid { flex: 1; min-height: 0; width: 100%; margin: 0; padding: 6px; gap: 12px; grid-template-columns: minmax(0, 1fr); grid-template-rows: repeat(2, minmax(140px, 1fr)); align-items: stretch; align-content: stretch; overflow-y: auto; }
+  .is-choosing-team .versus-badge { display: none; }
+  .is-choosing-team .team-card { min-height: 140px; padding: 10px 12px; display: grid; grid-template-columns: clamp(104px, 28vw, 132px) minmax(0, 1fr); grid-template-rows: auto auto auto; gap: 4px 10px; text-align: left; align-content: center; }
+  .is-choosing-team .team-sprite { grid-column: 1; grid-row: 1 / 4; height: 132px; margin: 0; }
+  .is-choosing-team .team-card .team-sprite .pixel-creature { width: 100% !important; height: 128px !important; max-width: 132px; max-height: 100%; }
+  .is-choosing-team .team-type { display: none; }
+  .is-choosing-team .team-card strong { grid-column: 2; font-size: 16px; padding-right: 18px; }
+  .is-choosing-team .team-card p { grid-column: 2; margin: 0; font-size: 10px; line-height: 1.5; }
+  .is-choosing-team .select-label { grid-column: 2; justify-self: start; font-size: 10px; }
+  .is-choosing-team .team-check { width: 20px; height: 20px; top: 8px; right: 8px; }
+  .is-choosing-team .team-card:hover { transform: none; }
+  .is-choosing-team .faction-next { flex: none; width: 100%; margin: 10px 0 0; gap: 0; padding: 8px 0 0; background: #0b1628; }
+  .is-choosing-team .faction-next > .pixel-button { min-height: 44px; }
+  .is-choosing-team .step-indicator { flex: none; padding: 6px 12px max(8px, env(safe-area-inset-bottom)); }
+}
+@media (max-width: 760px) and (max-height: 650px) {
+  .is-choosing-team .game-title { display: none; }
+  .is-choosing-team .choose-section { margin-top: 0; }
+  .is-choosing-team .section-heading p { display: none; }
+  .is-choosing-team .team-grid { grid-template-rows: repeat(2, minmax(118px, 1fr)); }
+  .is-choosing-team .team-card { min-height: 118px; }
+  .is-choosing-team .team-sprite { height: 104px; }
+}
+
+/* Briefing scenes share a stable frame and navigation baseline. */
+.is-reading-briefing .storyboard-tutorial { height: 600px; min-height: 0; animation: none; }
+.is-reading-briefing .storyboard-stage { min-height: 0; min-width: 0; }
+.is-reading-briefing .storyboard-copy { min-height: 0; display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
+.is-reading-briefing .storyboard-copy > p { min-height: 0; overflow-y: auto; }
+.is-reading-briefing .storyboard-progress { margin-top: 0; }
+@media (max-width: 760px) {
+  .onboarding.is-reading-briefing { height: 100dvh; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+  .is-reading-briefing .onboarding-top { flex-shrink: 0; }
+  .is-reading-briefing .onboarding-content { flex: 1; min-height: 0; display: flex; flex-direction: column; padding: 10px 0 max(10px, env(safe-area-inset-bottom)); }
+  .is-reading-briefing .game-title { display: none; }
+  .is-reading-briefing .storyboard-tutorial { flex: 1; height: 100%; min-height: 0; margin: 0; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 260px; }
+  .is-reading-briefing .storyboard-copy { padding: 12px 14px 8px; }
+  .is-reading-briefing .storyboard-copy h2 { margin: 8px 0; font-size: 20px; }
+  .is-reading-briefing .storyboard-progress { padding: 10px 0; }
+  .is-reading-briefing .storyboard-actions .pixel-button { min-height: 44px; }
+  .is-reading-briefing .arcade-briefing { width: 92%; height: calc(100% - 24px); min-height: 0; margin: 12px auto; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .is-reading-briefing .arcade-briefing-header { flex: none; gap: 5px; padding-bottom: 0; }
+  .is-reading-briefing .arcade-briefing-header b { font-size: 16px; }
+  .is-reading-briefing .arcade-briefing > canvas { flex: 1; min-height: 0; width: 100%; height: 0; object-fit: contain; }
+  .is-reading-briefing .arcade-briefing-controls { flex: none; gap: 3px; padding-top: 0; }
+  .is-reading-briefing .arcade-briefing-controls span,
+  .is-reading-briefing .arcade-briefing > p { display: none; }
+  .is-reading-briefing .brief-memory-board { flex: 1; min-height: 0; aspect-ratio: auto; padding: 6px; gap: 4px; grid-template-rows: repeat(4, minmax(0, 1fr)); }
+  .is-reading-briefing .preview-rune { min-height: 0; overflow: hidden; }
+  .is-reading-briefing .preview-rune img { height: 100%; min-height: 0; object-fit: contain; }
+  .is-reading-briefing .preview-rune small { display: none; }
+}
+@media (max-width: 760px) and (max-height: 650px) {
+  .is-reading-briefing .storyboard-tutorial { grid-template-rows: minmax(0, 1fr) 230px; }
+  .is-reading-briefing .storyboard-copy h2 { font-size: 17px; margin: 5px 0; }
+}

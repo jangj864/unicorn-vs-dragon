@@ -268,7 +268,7 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
   const turnPage = () => navigateFile(step + 1);
   const turnBack = () => navigateFile(step - 1);
 
-  const revealControl = (page: number) => page === step ? (<div className="archive-reading-controls"><button type="button" className="archive-reveal-all" disabled={isTurning || revealedPage === pageKey} onClick={() => setRevealedPage(pageKey)}><span aria-hidden="true">▸▸</span>{revealedPage === pageKey ? (locale === "ko" ? "전체 표시됨" : "ALL TEXT SHOWN") : (locale === "ko" ? "글 전체 보기" : "SHOW ALL TEXT")}</button></div>) : null;
+  const revealControl = (page: number) => page === step ? (<div className="archive-reading-controls"><button type="button" className="archive-reveal-all" aria-label={revealedPage === pageKey ? (locale === "ko" ? "전체 표시됨" : "ALL TEXT SHOWN") : (locale === "ko" ? "글 전체 보기" : "SHOW ALL TEXT")} disabled={isTurning || revealedPage === pageKey} onClick={() => setRevealedPage(pageKey)}><span className="archive-reveal-icon" aria-hidden="true">▸▸</span><span className="archive-reveal-label">{revealedPage === pageKey ? (locale === "ko" ? "전체 표시됨" : "ALL TEXT SHOWN") : (locale === "ko" ? "글 전체 보기" : "SHOW ALL TEXT")}</span></button></div>) : null;
 
   const renderFile = (page: number, preview = false) => (page === 0 ? (
               <article className="classified-cover" key="cover">
@@ -295,7 +295,7 @@ function Onboarding({ locale, setLocale, onComplete }: { locale: Locale; setLoca
             </article>);
 
   return (
-    <main className="onboarding">
+    <main className={`onboarding ${step === factionStep ? "is-choosing-team" : step >= tutorialStep ? "is-reading-briefing" : ""}`}>
       <div className="pixel-skyline onboarding-skyline" />
       <header className="onboarding-top">
         <button className="mini-logo home-logo" onClick={() => { turnTimers.current.forEach(window.clearTimeout); setIsTurning(false); setTurnTarget(null); setStep(0); setTeam(null); }} aria-label={locale === "ko" ? "메인 화면으로" : "Go to home"}>
