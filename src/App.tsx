@@ -1,3 +1,4 @@
+import { getPanBounds, constrainMap, type PanBounds } from "./game/mapView";
 import SoundSettings from "./game/SoundSettings";
 import { initializeAudio, setAudioScene, playSound } from "./game/audio";
 import { memoryCards } from "./game/memoryCards";
@@ -450,10 +451,15 @@ const gameInfo: Record<GameMode, { ko: string; en: string; code: string }> = {
 
 function mapPanBounds(viewport: HTMLDivElement, zoom: number) {
   const canvas = viewport.querySelector<HTMLElement>(".map-canvas");
-  return {
-    maxX: Math.max(0, ((canvas?.offsetWidth ?? viewport.clientWidth) * zoom - viewport.clientWidth) / 2),
-    maxY: Math.max(0, ((canvas?.offsetHeight ?? viewport.clientHeight) * zoom - viewport.clientHeight) / 2),
-  };
+  const rect = viewport.getBoundingClientRect();
+  const panel = viewport.closest(".game-layout")?.querySelector<HTMLElement>(".map-actions-rail");
+  const panelRect = panel?.getBoundingClientRect();
+  const overlaps = panel && panelRect && getComputedStyle(panel).position === "fixed"
+    && panelRect.left < rect.right && panelRect.right > rect.left;
+  const bottomOverlap = overlaps ? Math.max(0, rect.bottom - Math.max(rect.top, panelRect.top)) : 0;
+  return getPanBounds(viewport.clientWidth, viewport.clientHeight,
+    canvas?.offsetWidth ?? viewport.clientWidth,
+    canvas?.offsetHeight ?? viewport.clientHeight, zoom, bottomOverlap);
 }
 
 export default function App() {
@@ -492,7 +498,7 @@ export default function App() {
   const [mapView, setMapView] = useState({ x: 0, y: 0, zoom: 1 });
   const [isMapDragging, setIsMapDragging] = useState(false);
   const mapViewportRef = useRef<HTMLDivElement>(null);
-  const mapDrag = useRef<{ pointerId: number; startX: number; startY: number; originX: number; originY: number } | null>(null);
+  const mapDrag = useRef<{ pointerId: number; startX: number; startY: number; originX: number; originY: number; bounds: PanBounds } | null>(null);
   const t = copy[locale];
   const zone = useMemo(() => zones.find((item) => item.id === zoneId) ?? zones[0], [zoneId]);
   const dragonWins = team === "dragon" ? playerWins : enemyWins;
@@ -509,12 +515,15 @@ export default function App() {
       const viewport = mapViewportRef.current;
       if (!viewport) return;
       setMapView((current) => {
-        const { maxX, maxY } = mapPanBounds(viewport, current.zoom);
-        return { ...current, x: Math.min(maxX, Math.max(-maxX, current.x)), y: Math.min(maxY, Math.max(-maxY, current.y)) };
+        return constrainMap(current, mapPanBounds(viewport, current.zoom));
       });
     };
     const observer = new ResizeObserver(containMap);
-    if (mapViewportRef.current) observer.observe(mapViewportRef.current);
+    if (mapViewportRef.current) {
+      observer.observe(mapViewportRef.current);
+      const panel = mapViewportRef.current.closest(".game-layout")?.querySelector(".map-actions-rail");
+      if (panel) observer.observe(panel);
+    }
     containMap();
     return () => observer.disconnect();
   }, [team, inBattle]);
@@ -574,28 +583,23 @@ export default function App() {
       const zoom = Math.min(2.4, Math.max(1, current.zoom + amount));
       const viewport = mapViewportRef.current;
       if (!viewport) return { ...current, zoom };
-      const { maxX, maxY } = mapPanBounds(viewport, zoom);
-      return { zoom, x: Math.min(maxX, Math.max(-maxX, current.x)), y: Math.min(maxY, Math.max(-maxY, current.y)) };
+      return constrainMap(current, mapPanBounds(viewport, zoom), current.x, current.y, zoom);
     });
   };
 
   const startMapDrag = (event: React.PointerEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest("button")) return;
-    mapDrag.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, originX: mapView.x, originY: mapView.y };
+    mapDrag.current = { pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, originX: mapView.x, originY: mapView.y, bounds: mapPanBounds(event.currentTarget, mapView.zoom) };
     event.currentTarget.setPointerCapture(event.pointerId);
     setIsMapDragging(true);
   };
 
   const moveMap = (event: React.PointerEvent<HTMLDivElement>) => {
     if (!mapDrag.current || mapDrag.current.pointerId !== event.pointerId) return;
-    const viewport = mapViewportRef.current;
-    if (!viewport) return;
+    const bounds = mapDrag.current.bounds;
     const nextX = mapDrag.current.originX + event.clientX - mapDrag.current.startX;
     const nextY = mapDrag.current.originY + event.clientY - mapDrag.current.startY;
-    setMapView((current) => {
-      const { maxX, maxY } = mapPanBounds(viewport, current.zoom);
-      return { ...current, x: Math.min(maxX, Math.max(-maxX, nextX)), y: Math.min(maxY, Math.max(-maxY, nextY)) };
-    });
+    setMapView((current) => constrainMap(current, bounds, nextX, nextY));
   };
 
   const stopMapDrag = (event: React.PointerEvent<HTMLDivElement>) => {
